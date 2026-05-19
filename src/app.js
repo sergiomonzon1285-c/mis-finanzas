@@ -1,24 +1,42 @@
-import { getData, saveData } from './storage'
+import {
+  getExpensesFromDB,
+  saveExpenseToDB
+} from './storage'
+
 import { getCurrentMonthKey } from './months'
 
-let data = getData()
+let expenses = []
 
-export function addExpense(type, expense) {
-  data[type].push(expense)
-  saveData(data)
+export async function loadExpenses() {
+  expenses = await getExpensesFromDB()
 }
 
 export function getExpenses(type) {
-  return data[type]
+  return expenses.filter(
+    expense => expense.type === type
+  )
 }
 
-export function createInstallment(name, amount, installments) {
+export async function addExpense(type, expense) {
+  const newExpense = {
+    ...expense,
+    type
+  }
+
+  await saveExpenseToDB(newExpense)
+
+  expenses.push(newExpense)
+}
+
+export function createInstallment(
+  name,
+  amount,
+  installments
+) {
   return {
-    id: crypto.randomUUID(),
     name,
     amount,
     installments,
-    remaining: installments,
-    startMonth: getCurrentMonthKey()
+    start_month: getCurrentMonthKey()
   }
 }

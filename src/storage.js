@@ -1,13 +1,24 @@
-const STORAGE_KEY = 'mis_finanzas_data'
+import { supabase } from './supabase'
 
-export function getData() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-    fixed: [],
-    installments: [],
-    unique: []
+export async function getExpensesFromDB() {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+
+  if (error) {
+    console.error(error)
+    return []
   }
+
+  return data
 }
 
-export function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+export async function saveExpenseToDB(expense) {
+  const { error } = await supabase
+    .from('expenses')
+    .insert(expense)
+
+  if (error) {
+    console.error(error)
+  }
 }

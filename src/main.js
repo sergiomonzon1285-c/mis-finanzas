@@ -3,7 +3,8 @@ import './style.css'
 import {
   addExpense,
   getExpenses,
-  createInstallment
+  createInstallment,
+  loadExpenses
 } from './app'
 
 import {
@@ -314,4 +315,9 @@ function updateGlobalTotal() {
     `$${total.toLocaleString()}`
 }
 
-renderExpenses()
+async function start() {
+  await loadExpenses()
+  renderExpenses()
+}
+
+start()
