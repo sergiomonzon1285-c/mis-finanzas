@@ -181,7 +181,7 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
     id: crypto.randomUUID(),
     name,
     amount,
-    createdMonth: selectedMonth
+    created_month: selectedMonth
   }
 
   // =========================
@@ -225,7 +225,7 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
   expenseAmount.value = ''
   expenseInstallments.value = ''
 
-  // =========================
+  // =========================git add .
   // RENDER
   // =========================
   renderExpenses()
