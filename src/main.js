@@ -269,7 +269,7 @@ function renderUnique() {
   let total = 0
 
   getExpenses('unique')
-    .filter(expense => expense.createdMonth === selectedMonth)
+    .filter(expense => expense.created_month === selectedMonth)
     .forEach(expense => {
       total += expense.amount
 
@@ -334,7 +334,7 @@ function updateGlobalTotal() {
 
   const unique =
     getExpenses('unique')
-      .filter(item => item.createdMonth === selectedMonth)
+      .filter(item => item.created_month === selectedMonth)
       .reduce((acc, item) => acc + item.amount, 0)
 
   const installments =
