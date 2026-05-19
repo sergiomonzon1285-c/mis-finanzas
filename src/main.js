@@ -167,11 +167,15 @@ modal.addEventListener('click', (e) => {
   }
 })
 
-document.querySelector('#save-expense').addEventListener('click', () => {
-  const name = expenseName.value
+document.querySelector('#save-expense').addEventListener('click', async () => {
+
+  const name = expenseName.value.trim()
   const amount = Number(expenseAmount.value)
 
-  if (!name || !amount) return
+  if (!name || !amount) {
+    alert('Completá nombre y monto')
+    return
+  }
 
   let expense = {
     id: crypto.randomUUID(),
@@ -180,22 +184,50 @@ document.querySelector('#save-expense').addEventListener('click', () => {
     createdMonth: selectedMonth
   }
 
+  // =========================
+  // CUOTAS
+  // =========================
   if (currentType === 'installments') {
+
+    const installments = Number(expenseInstallments.value)
+
+    if (!installments || installments <= 0) {
+      alert('Ingresá cantidad de cuotas')
+      return
+    }
+
     expense = createInstallment(
       name,
       amount,
-      Number(expenseInstallments.value)
+      installments
     )
   }
 
-  addExpense(currentType, expense)
+  // =========================
+  // GUARDAR EN SUPABASE
+  // =========================
+  await addExpense(currentType, expense)
 
+  // =========================
+  // RECARGAR DESDE SUPABASE
+  // =========================
+  await loadExpenses()
+
+  // =========================
+  // CERRAR MODAL
+  // =========================
   modal.classList.add('hidden')
 
+  // =========================
+  // LIMPIAR INPUTS
+  // =========================
   expenseName.value = ''
   expenseAmount.value = ''
   expenseInstallments.value = ''
 
+  // =========================
+  // RENDER
+  // =========================
   renderExpenses()
 })
 
