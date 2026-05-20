@@ -379,7 +379,6 @@ function renderInstallments() {
   </button>
 
 </div>
-    `
   })
 
   document.querySelector('#installments-total').innerText =
