@@ -377,9 +377,11 @@ function renderInstallments() {
   >
     🗑️
   </button>
+  
+  </div>
 
 </div>
-    `
+`
   })
 
   document.querySelector('#installments-total').innerText =
