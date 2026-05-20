@@ -409,7 +409,7 @@ document
     renderExpenses()
 
     alert('Datos actualizados')
-})
+});
 window.removeExpense = async function(id) {
 
   const confirmDelete = confirm(
