@@ -14,6 +14,10 @@ import {
   getMonthDifference
 } from './months'
 
+// =========================
+// HTML APP
+// =========================
+
 document.querySelector('#app').innerHTML = `
 <div class="app">
 
@@ -36,68 +40,85 @@ document.querySelector('#app').innerHTML = `
 
 </header>
 
-  <main class="dashboard">
+<main class="dashboard">
 
-    <section class="card fixed">
-      <div class="card-header">
-        <h2>Gastos Fijos</h2>
-        <span id="fixed-total">$0</span>
-      </div>
+  <section class="card fixed">
 
-      <div class="expense-list" id="fixed-list"></div>
+    <div class="card-header">
+      <h2>Gastos Fijos</h2>
+      <span id="fixed-total">$0</span>
+    </div>
 
-      <button class="add-btn" id="add-fixed">
-        + Agregar
-      </button>
-    </section>
+    <div class="expense-list" id="fixed-list"></div>
 
-    <section class="card installments">
-      <div class="card-header">
-        <h2>Cuotas</h2>
-        <span id="installments-total">$0</span>
-      </div>
+    <button class="add-btn" id="add-fixed">
+      + Agregar
+    </button>
 
-      <div class="expense-list" id="installments-list"></div>
+  </section>
 
-      <button class="add-btn" id="add-installment">
-        + Agregar
-      </button>
-    </section>
+  <section class="card installments">
 
-    <section class="card unique">
-      <div class="card-header">
-        <h2>Gastos Únicos</h2>
-        <span id="unique-total">$0</span>
-      </div>
+    <div class="card-header">
+      <h2>Cuotas</h2>
+      <span id="installments-total">$0</span>
+    </div>
 
-      <div class="expense-list" id="unique-list"></div>
+    <div class="expense-list" id="installments-list"></div>
 
-      <button class="add-btn" id="add-unique">
-        + Agregar
-      </button>
-    </section>
+    <button class="add-btn" id="add-installment">
+      + Agregar
+    </button>
 
-    <aside class="summary">
-      <h2>Resumen</h2>
+  </section>
 
-      <div class="summary-item">
-        <span>Total general</span>
-        <strong id="global-total">$0</strong>
-      </div>
-    </aside>
+  <section class="card unique">
 
-  </main>
+    <div class="card-header">
+      <h2>Gastos Únicos</h2>
+      <span id="unique-total">$0</span>
+    </div>
+
+    <div class="expense-list" id="unique-list"></div>
+
+    <button class="add-btn" id="add-unique">
+      + Agregar
+    </button>
+
+  </section>
+
+  <aside class="summary">
+
+    <h2>Resumen</h2>
+
+    <div class="summary-item">
+      <span>Total general</span>
+      <strong id="global-total">$0</strong>
+    </div>
+
+  </aside>
+
+</main>
 
 </div>
 
 <div class="modal hidden" id="modal">
+
   <div class="modal-content">
 
     <h2 id="modal-title">Agregar</h2>
 
-    <input type="text" id="expense-name" placeholder="Nombre">
+    <input
+      type="text"
+      id="expense-name"
+      placeholder="Nombre"
+    >
 
-    <input type="number" id="expense-amount" placeholder="Monto">
+    <input
+      type="number"
+      id="expense-amount"
+      placeholder="Monto"
+    >
 
     <input
       type="number"
@@ -111,8 +132,13 @@ document.querySelector('#app').innerHTML = `
     </button>
 
   </div>
+
 </div>
 `
+
+// =========================
+// VARIABLES
+// =========================
 
 let currentType = null
 
@@ -127,7 +153,12 @@ const monthSelect = document.querySelector('#month-select')
 
 let selectedMonth = getCurrentMonthKey()
 
+// =========================
+// SELECTOR MESES
+// =========================
+
 generateMonthOptions().forEach(month => {
+
   monthSelect.innerHTML += `
     <option value="${month.key}">
       ${month.label}
@@ -138,23 +169,40 @@ generateMonthOptions().forEach(month => {
 monthSelect.value = selectedMonth
 
 monthSelect.addEventListener('change', () => {
+
   selectedMonth = monthSelect.value
+
   renderExpenses()
 })
 
-document.querySelector('#add-fixed').addEventListener('click', () => {
-  openModal('fixed')
-})
+// =========================
+// BOTONES AGREGAR
+// =========================
 
-document.querySelector('#add-installment').addEventListener('click', () => {
-  openModal('installments')
-})
+document
+  .querySelector('#add-fixed')
+  .addEventListener('click', () => {
+    openModal('fixed')
+  })
 
-document.querySelector('#add-unique').addEventListener('click', () => {
-  openModal('unique')
-})
+document
+  .querySelector('#add-installment')
+  .addEventListener('click', () => {
+    openModal('installments')
+  })
+
+document
+  .querySelector('#add-unique')
+  .addEventListener('click', () => {
+    openModal('unique')
+  })
+
+// =========================
+// ABRIR MODAL
+// =========================
 
 function openModal(type) {
+
   currentType = type
 
   modal.classList.remove('hidden')
@@ -170,89 +218,107 @@ function openModal(type) {
   }
 
   if (type === 'installments') {
-    modalTitle.innerText = 'Agregar cuota'
-    expenseInstallments.classList.remove('hidden')
-    }
 
+    modalTitle.innerText = 'Agregar cuota'
+
+    expenseInstallments.classList.remove('hidden')
+  }
 }
 
+// =========================
+// CERRAR MODAL
+// =========================
+
 modal.addEventListener('click', (e) => {
+
   if (e.target.id === 'modal') {
     modal.classList.add('hidden')
   }
 })
 
-document.querySelector('#save-expense').addEventListener('click', async () => {
+// =========================
+// GUARDAR GASTO
+// =========================
 
-  const name = expenseName.value.trim()
-  const amount = Number(expenseAmount.value)
+document
+  .querySelector('#save-expense')
+  .addEventListener('click', async () => {
 
-  if (!name || !amount) {
-    alert('Completá nombre y monto')
-    return
-  }
+    const name = expenseName.value.trim()
 
-  let expense = {
-    id: crypto.randomUUID(),
-    name,
-    amount,
-    created_month: selectedMonth
-  }
+    const amount = Number(expenseAmount.value)
 
-  // =========================
-  // CUOTAS
-  // =========================
-  if (currentType === 'installments') {
-
-    const installments = Number(expenseInstallments.value)
-
-    if (!installments || installments <= 0) {
-      alert('Ingresá cantidad de cuotas')
+    if (!name || !amount) {
+      alert('Completá nombre y monto')
       return
     }
 
-    expense = createInstallment(
+    let expense = {
+      id: crypto.randomUUID(),
       name,
       amount,
-      installments
-    )
-  }
+      created_month: selectedMonth
+    }
 
-  // =========================
-  // GUARDAR EN SUPABASE
-  // =========================
-  await addExpense(currentType, expense)
+    // =========================
+    // CUOTAS
+    // =========================
 
-  // =========================
-  // RECARGAR DESDE SUPABASE
-  // =========================
-  await loadExpenses()
+    if (currentType === 'installments') {
 
-  // =========================
-  // CERRAR MODAL
-  // =========================
-  modal.classList.add('hidden')
+      const installments = Number(
+        expenseInstallments.value
+      )
 
-  // =========================
-  // LIMPIAR INPUTS
-  // =========================
-  expenseName.value = ''
-  expenseAmount.value = ''
-  expenseInstallments.value = ''
+      if (!installments || installments <= 0) {
+        alert('Ingresá cantidad de cuotas')
+        return
+      }
 
-  // =========================
-  // RENDER
-  // =========================
-  renderExpenses()
-})
+      expense = createInstallment(
+        name,
+        amount,
+        installments
+      )
+    }
+
+    // =========================
+    // GUARDAR
+    // =========================
+
+    await addExpense(currentType, expense)
+
+    await loadExpenses()
+
+    // =========================
+    // LIMPIAR
+    // =========================
+
+    expenseName.value = ''
+    expenseAmount.value = ''
+    expenseInstallments.value = ''
+
+    modal.classList.add('hidden')
+
+    renderExpenses()
+  })
+
+// =========================
+// RENDER GENERAL
+// =========================
 
 function renderExpenses() {
+
   renderFixed()
   renderUnique()
   renderInstallments()
 
   updateGlobalTotal()
 }
+
+// =========================
+// FIJOS
+// =========================
 
 function renderFixed() {
 
@@ -271,7 +337,7 @@ function renderFixed() {
 
         <span>${expense.name}</span>
 
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
 
           <strong>
             $${expense.amount.toLocaleString()}
@@ -292,6 +358,11 @@ function renderFixed() {
   document.querySelector('#fixed-total').innerText =
     `$${total.toLocaleString()}`
 }
+
+// =========================
+// UNICOS
+// =========================
+
 function renderUnique() {
 
   const list = document.querySelector('#unique-list')
@@ -301,7 +372,9 @@ function renderUnique() {
   let total = 0
 
   getExpenses('unique')
-    .filter(expense => expense.created_month === selectedMonth)
+    .filter(expense =>
+      expense.created_month === selectedMonth
+    )
     .forEach(expense => {
 
       total += expense.amount
@@ -311,7 +384,7 @@ function renderUnique() {
 
           <span>${expense.name}</span>
 
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; gap:10px; align-items:center;">
 
             <strong>
               $${expense.amount.toLocaleString()}
@@ -333,7 +406,12 @@ function renderUnique() {
     `$${total.toLocaleString()}`
 }
 
+// =========================
+// CUOTAS
+// =========================
+
 function renderInstallments() {
+
   const list = document.querySelector('#installments-list')
 
   list.innerHTML = ''
@@ -358,44 +436,54 @@ function renderInstallments() {
 
     list.innerHTML += `
       <div class="expense-item">
+
         <div>
+
           <span>${expense.name}</span>
 
           <small>
             ${remaining} cuotas restantes
           </small>
+
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
 
-  <strong>
-    $${expense.amount.toLocaleString()}
-  </strong>
+          <strong>
+            $${expense.amount.toLocaleString()}
+          </strong>
 
-  <button
-    onclick="removeExpense('${expense.id}')"
-  >
-    🗑️
-  </button>
-  
-  </div>
+          <button
+            onclick="removeExpense('${expense.id}')"
+          >
+            🗑️
+          </button>
 
-</div>
-`
+        </div>
+
+      </div>
+    `
   })
 
   document.querySelector('#installments-total').innerText =
     `$${total.toLocaleString()}`
 }
 
+// =========================
+// TOTAL GENERAL
+// =========================
+
 function updateGlobalTotal() {
+
   const fixed =
     getExpenses('fixed')
       .reduce((acc, item) => acc + item.amount, 0)
 
   const unique =
     getExpenses('unique')
-      .filter(item => item.created_month === selectedMonth)
+      .filter(item =>
+        item.created_month === selectedMonth
+      )
       .reduce((acc, item) => acc + item.amount, 0)
 
   const installments =
@@ -408,12 +496,23 @@ function updateGlobalTotal() {
     `$${total.toLocaleString()}`
 }
 
+// =========================
+// START
+// =========================
+
 async function start() {
+
   await loadExpenses()
+
   renderExpenses()
 }
 
 start()
+
+// =========================
+// REFRESH
+// =========================
+
 document
   .querySelector('#refresh-btn')
   .addEventListener('click', async () => {
@@ -423,7 +522,12 @@ document
     renderExpenses()
 
     alert('Datos actualizados')
-});
+  })
+
+// =========================
+// DELETE
+// =========================
+
 window.removeExpense = async function(id) {
 
   const confirmDelete = confirm(
