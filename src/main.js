@@ -171,6 +171,10 @@ document.querySelector('#app').innerHTML = `
 
 <select id="expense-category">
 
+ <option value="Otros">
+  📦 Otros
+ </option>
+
   <option value="Hogar">
     🏠 Hogar
   </option>
