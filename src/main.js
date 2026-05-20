@@ -5,6 +5,7 @@ import {
   getExpenses,
   createInstallment,
   loadExpenses
+  deleteExpense
 } from './app'
 
 import {
@@ -267,6 +268,9 @@ function renderFixed() {
         <span>${expense.name}</span>
         <strong>$${expense.amount.toLocaleString()}</strong>
       </div>
+      <button onclick="removeExpense('${expense.id}')">
+  🗑️
+</button>
     `
   })
 
@@ -376,3 +380,17 @@ document
 
     alert('Datos actualizados')
 })
+window.removeExpense = async function(id) {
+
+  const confirmDelete = confirm(
+    '¿Eliminar este gasto?'
+  )
+
+  if (!confirmDelete) return
+
+  await deleteExpense(id)
+
+  await loadExpenses()
+
+  renderExpenses()
+}
