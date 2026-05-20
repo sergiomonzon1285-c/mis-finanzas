@@ -114,6 +114,7 @@ document.querySelector('#app').innerHTML = `
 <div class="summary-item">
   <span>Balance</span>
   <strong id="global-total">$0</strong>
+  <div id="accounts-summary"></div>
 </div>
 
   </aside>
@@ -367,6 +368,8 @@ function renderExpenses() {
   renderInstallments()
 
   updateGlobalTotal()
+  
+  renderAccountsSummary()
 }
 
 // =========================
@@ -567,7 +570,70 @@ function renderInstallments() {
 // =========================
 // TOTAL GENERAL
 // =========================
+function renderAccountsSummary() {
 
+  const container =
+    document.querySelector('#accounts-summary')
+
+  container.innerHTML = ''
+
+  const expenses = [
+
+    ...getExpenses('fixed'),
+
+    ...getExpenses('unique')
+      .filter(item =>
+        item.created_month === selectedMonth
+      ),
+
+    ...getExpenses('installments')
+      .filter(expense => {
+
+        const monthsPassed =
+          getMonthDifference(
+            expense.start_month,
+            selectedMonth
+          )
+
+        const remaining =
+          expense.installments - monthsPassed
+
+        return remaining > 0 && monthsPassed >= 0
+      })
+  ]
+
+  const totals = {}
+
+  expenses.forEach(expense => {
+
+    const account =
+      expense.account || 'Sin cuenta'
+
+    if (!totals[account]) {
+      totals[account] = 0
+    }
+
+    totals[account] += expense.amount
+  })
+
+  Object.entries(totals).forEach(
+    ([account, total]) => {
+
+      container.innerHTML += `
+
+        <div class="summary-item">
+
+          <span>${account}</span>
+
+          <strong>
+            $${total.toLocaleString()}
+          </strong>
+
+        </div>
+      `
+    }
+  )
+}
 function updateGlobalTotal() {
 const income =
   getExpenses('income')
