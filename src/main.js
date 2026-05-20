@@ -172,7 +172,7 @@ function openModal(type) {
   if (type === 'installments') {
     modalTitle.innerText = 'Agregar cuota'
     expenseInstallments.classList.remove('hidden')
-  }
+  
 }
 
 modal.addEventListener('click', (e) => {
@@ -327,10 +327,6 @@ function renderUnique() {
         </div>
       `
     })
-
-  document.querySelector('#unique-total').innerText =
-    `$${total.toLocaleString()}`
-}
 
   document.querySelector('#unique-total').innerText =
     `$${total.toLocaleString()}`
