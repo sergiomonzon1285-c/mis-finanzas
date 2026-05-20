@@ -765,61 +765,27 @@ body {
 
   opacity: .9;
 }
-/* =========================
-   SCROLL TO TOP
-========================= */
-
 #scroll-top-btn {
 
   position: fixed;
 
-  right: 18px;
+  bottom: 20px;
 
-  bottom: 18px;
+  right: 20px;
 
-  width: 56px;
+  width: 60px;
 
-  height: 56px;
+  height: 60px;
+
+  background: red;
+
+  color: white;
 
   border: none;
 
   border-radius: 50%;
 
-  background: rgba(255,255,255,.55);
+  font-size: 30px;
 
-  backdrop-filter: blur(20px);
-
-  -webkit-backdrop-filter: blur(20px);
-
-  border: 1px solid rgba(255,255,255,.35);
-
-  color: #1e293b;
-
-  font-size: 1.5rem;
-
-  font-weight: bold;
-
-  display: flex;
-
-  justify-content: center;
-
-  align-items: center;
-
-  cursor: pointer;
-
-  z-index: 99999;
-
-  box-shadow:
-    0 10px 30px rgba(15,23,42,.18);
-
-  transition:
-    transform .2s ease,
-    opacity .2s ease;
-}
-
-#scroll-top-btn:hover {
-
-  transform: translateY(-3px);
-
-  opacity: .9;
+  z-index: 999999;
 }
