@@ -117,6 +117,14 @@ document.querySelector('#app').innerHTML = `
   <div id="accounts-summary"></div>
 </div>
 
+<div class="summary-item">
+
+  <h3>Categorías</h3>
+
+</div>
+
+<div id="categories-summary"></div>
+
   </aside>
 
 </main>
@@ -140,25 +148,67 @@ document.querySelector('#app').innerHTML = `
       id="expense-amount"
       placeholder="Monto"
     >
+
 <select id="expense-account">
 
-  <option value="VISA">
-    VISA
+  <option value="Visa">
+    Visa
   </option>
 
-  <option value="MASTERCARD">
+  <option value="Mastercard">
     Mastercard
   </option>
 
-  <option value="AMEX">
-    AMEX
+  <option value="Amex">
+    Amex
   </option>
 
-  <option value="EFECTIVO">
+  <option value="Efectivo">
     Efectivo
   </option>
 
 </select>
+
+<select id="expense-category">
+
+  <option value="Hogar">
+    🏠 Hogar
+  </option>
+
+  <option value="Ropa">
+    👕 Ropa
+  </option>
+
+  <option value="Supermercado">
+    🛒 Supermercado
+  </option>
+
+  <option value="Mantenimiento">
+    🔧 Mantenimiento
+  </option>
+
+  <option value="Vehículos">
+    🚗 Vehículos
+  </option>
+
+  <option value="Ocio">
+    🎮 Ocio
+  </option>
+
+  <option value="Ayudas">
+    🤝 Ayudas
+  </option>
+
+  <option value="Familia">
+    👨‍👩‍👧 Familia
+  </option>
+
+  <option value="Regalos">
+    🎁 Regalos
+  </option>
+
+</select>
+
     <input
       type="number"
       id="expense-installments"
@@ -187,6 +237,7 @@ const modalTitle = document.querySelector('#modal-title')
 const expenseName = document.querySelector('#expense-name')
 const expenseAmount = document.querySelector('#expense-amount')
 const expenseAccount = document.querySelector('#expense-account')
+const expenseCategory = document.querySelector('#expense-category')
 const expenseInstallments = document.querySelector('#expense-installments')
 
 const monthSelect = document.querySelector('#month-select')
@@ -306,6 +357,7 @@ document
   name,
   amount,
   account: expenseAccount.value,
+  category: expenseCategory.value,
   created_month: selectedMonth
 }
 
@@ -324,11 +376,12 @@ document
         return
       }
 
-      expense = createInstallment(
+expense = createInstallment(
   name,
   amount,
   installments,
-  expenseAccount.value
+  expenseAccount.value,
+  expenseCategory.value
 )
     }
 
@@ -370,6 +423,9 @@ function renderExpenses() {
   updateGlobalTotal()
   
   renderAccountsSummary()
+
+renderCategoriesSummary()
+
 }
 
 // =========================
@@ -634,6 +690,101 @@ function renderAccountsSummary() {
     }
   )
 }
+
+function renderCategoriesSummary() {
+
+  const container =
+    document.querySelector('#categories-summary')
+
+  container.innerHTML = ''
+
+  const expenses = [
+
+    ...getExpenses('fixed'),
+
+    ...getExpenses('unique')
+      .filter(item =>
+        item.created_month === selectedMonth
+      ),
+
+    ...getExpenses('installments')
+      .filter(expense => {
+
+        const monthsPassed =
+          getMonthDifference(
+            expense.start_month,
+            selectedMonth
+          )
+
+        const remaining =
+          expense.installments - monthsPassed
+
+        return remaining > 0 && monthsPassed >= 0
+      })
+  ]
+
+  const totals = {}
+
+  let grandTotal = 0
+
+  expenses.forEach(expense => {
+
+    const category =
+      expense.category || 'Otros'
+
+    if (!totals[category]) {
+      totals[category] = 0
+    }
+
+    totals[category] += expense.amount
+
+    grandTotal += expense.amount
+  })
+
+  Object.entries(totals).forEach(
+    ([category, total]) => {
+
+      const percent =
+        ((total / grandTotal) * 100)
+          .toFixed(0)
+
+container.innerHTML += `
+
+  <div class="summary-item category-item">
+
+    <div class="category-header">
+
+      <div>
+
+        <span>${category}</span>
+
+        <small>
+          ${percent}%
+        </small>
+
+      </div>
+
+      <strong>
+        $${total.toLocaleString()}
+      </strong>
+
+    </div>
+
+    <div class="category-bar">
+
+      <div
+        class="category-fill category-${category}"
+        style="width:${percent}%"
+      ></div>
+
+    </div>
+
+  </div>
+`
+    }
+  )
+}
+
 function updateGlobalTotal() {
 const income =
   getExpenses('income')

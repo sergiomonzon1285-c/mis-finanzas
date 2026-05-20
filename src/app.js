@@ -38,7 +38,8 @@ export function createInstallment(
   name,
   amount,
   installments,
-  account
+  account,
+  category
 ) {
 
   return {
@@ -46,6 +47,7 @@ export function createInstallment(
     amount,
     installments,
     account,
+    category,
     start_month: getCurrentMonthKey()
   }
 }
