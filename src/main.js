@@ -343,7 +343,7 @@ function renderInstallments() {
   getExpenses('installments').forEach(expense => {
 
     const monthsPassed = getMonthDifference(
-      expense.startMonth,
+      expense.start_month,
       selectedMonth
     )
 
