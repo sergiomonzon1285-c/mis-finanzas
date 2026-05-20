@@ -254,7 +254,6 @@ document
     }
 
     let expense = {
-      id: crypto.randomUUID(),
       name,
       amount,
       created_month: selectedMonth
