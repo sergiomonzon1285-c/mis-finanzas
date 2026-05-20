@@ -5,17 +5,40 @@
 }
 
 body {
+
   overflow-x: hidden;
-  background: #91afec;
+
+  background:
+    linear-gradient(
+      135deg,
+      #dbeafe 0%,
+      #eff6ff 45%,
+      #f8fafc 100%
+    );
+
   font-family: Inter, sans-serif;
+
   color: #1f2937;
+
+  min-height: 100vh;
 }
 
+/* =========================
+   APP
+========================= */
+
 .app {
+
   padding: 20px;
+
   max-width: 1400px;
+
   margin: auto;
 }
+
+/* =========================
+   TOPBAR
+========================= */
 
 .topbar {
 
@@ -41,7 +64,10 @@ body {
 }
 
 .topbar h1 {
+
   font-size: 2rem;
+
+  font-weight: 800;
 }
 
 .month-select {
@@ -50,14 +76,25 @@ body {
 
   max-width: 220px;
 
-  padding: 10px;
+  padding: 12px;
 
-  border-radius: 12px;
+  border-radius: 14px;
 
   border: none;
 
+  background: rgba(255,255,255,.7);
+
+  backdrop-filter: blur(12px);
+
   font-size: 16px;
+
+  box-shadow:
+    0 8px 24px rgba(15,23,42,.06);
 }
+
+/* =========================
+   DASHBOARD
+========================= */
 
 .dashboard {
 
@@ -70,7 +107,7 @@ body {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fit, minmax(300px, 1fr));
+    repeat(auto-fit, minmax(320px, 1fr));
 
   gap: 20px;
 
@@ -79,16 +116,47 @@ body {
   box-sizing: border-box;
 }
 
-.card {
-  background: white;
-  border-radius: 24px;
-  padding: 20px;
+/* =========================
+   CARDS
+========================= */
 
-  box-shadow: 0 10px 30px rgba(0,0,0,.05);
+.card {
+
+  background: rgba(255,255,255,.72);
+
+  backdrop-filter: blur(18px);
+
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,.35);
+
+  border-radius: 28px;
+
+  padding: 22px;
+
+  box-shadow:
+    0 10px 40px rgba(15,23,42,.08);
 
   display: flex;
+
   flex-direction: column;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
 }
+
+.card:hover {
+
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 20px 50px rgba(15,23,42,.12);
+}
+
+/* =========================
+   CARD HEADERS
+========================= */
 
 .fixed .card-header {
   background: #3b82f6;
@@ -97,6 +165,7 @@ body {
 .installments .card-header {
   background: #ef4444;
 }
+
 .income .card-header {
   background: #16a34a;
 }
@@ -106,61 +175,131 @@ body {
 }
 
 .card-header {
+
   padding: 18px;
-  border-radius: 18px;
+
+  border-radius: 20px;
 
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 
   color: white;
+
   margin-bottom: 20px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25);
 }
 
+/* =========================
+   EXPENSES
+========================= */
+
 .expense-list {
+
   flex: 1;
 }
 
 .expense-item {
-  background: #f9fafb;
-  border-radius: 14px;
+
+  background: rgba(255,255,255,.7);
+
+  border-radius: 18px;
+
   padding: 16px;
+
   margin-bottom: 12px;
 
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
+
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 4px 18px rgba(15,23,42,.05);
 }
 
 .expense-item small {
+
   display: block;
+
   color: #6b7280;
+
   margin-top: 4px;
 }
 
+/* =========================
+   BUTTONS
+========================= */
+
 .add-btn {
+
   border: none;
+
   padding: 14px;
-  border-radius: 16px;
+
+  border-radius: 18px;
+
   background: #2563eb;
+
   color: white;
+
   font-size: 1rem;
+
+  font-weight: 600;
+
   cursor: pointer;
 
-  transition: .2s;
+  transition:
+    transform .2s ease,
+    opacity .2s ease;
 }
 
 .add-btn:hover {
+
   transform: translateY(-2px);
+
+  opacity: .92;
 }
+
+#refresh-btn {
+
+  background: #2563eb;
+
+  color: white;
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 12px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+/* =========================
+   SUMMARY
+========================= */
 
 .summary {
 
   width: 100%;
 
-  background: white;
+  background: rgba(255,255,255,.72);
 
-  border-radius: 24px;
+  backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,.35);
+
+  border-radius: 28px;
 
   padding: 24px;
 
@@ -171,10 +310,14 @@ body {
   flex-direction: column;
 
   gap: 16px;
+
+  box-shadow:
+    0 10px 40px rgba(15,23,42,.08);
 }
 
 .summary h2 {
-  margin-bottom: 20px;
+
+  margin-bottom: 10px;
 }
 
 .summary-item {
@@ -189,136 +332,125 @@ body {
 
   gap: 12px;
 
-  background: #f3f4f6;
+  background: rgba(255,255,255,.6);
 
   padding: 16px;
 
-  border-radius: 16px;
+  border-radius: 18px;
 
   box-sizing: border-box;
 }
 
 .summary-item.total {
+
   background: #dbeafe;
+
   color: #1d4ed8;
+
   font-weight: bold;
 }
 
-@media(max-width: 1200px) {
-  .dashboard {
-    grid-template-columns: 1fr;
-  }
-}
+/* =========================
+   MODAL
+========================= */
 
 .modal {
+
   position: fixed;
+
   inset: 0;
 
-  background: rgba(0,0,0,.45);
+  background: rgba(15,23,42,.35);
+
+  backdrop-filter: blur(10px);
 
   display: flex;
+
   justify-content: center;
+
   align-items: center;
 
   z-index: 999;
 }
 
 .modal-content {
-  background: white;
+
+  background: rgba(255,255,255,.82);
+
+  backdrop-filter: blur(22px);
+
   width: 420px;
 
-  border-radius: 28px;
+  border-radius: 30px;
+
   padding: 28px;
 
   display: flex;
+
   flex-direction: column;
+
   gap: 16px;
 
-  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  box-shadow:
+    0 20px 60px rgba(15,23,42,.18);
 }
 
 .modal-content h2 {
+
   margin-bottom: 10px;
 }
 
-.modal-content input {
+.modal-content input,
+.modal-content select {
+
   border: none;
-  background: #f3f4f6;
+
+  background: rgba(255,255,255,.8);
 
   padding: 16px;
-  border-radius: 14px;
+
+  border-radius: 16px;
 
   font-size: 1rem;
+
+  transition: .2s;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+
+  outline: none;
+
+  background: white;
+
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,.15);
 }
 
 .modal-content button {
+
   border: none;
+
   background: #2563eb;
+
   color: white;
 
   padding: 16px;
-  border-radius: 14px;
+
+  border-radius: 16px;
 
   font-size: 1rem;
+
   font-weight: 700;
 
   cursor: pointer;
 }
 
 .hidden {
+
   display: none;
 }
-#refresh-btn {
 
-  background: #2563eb;
-  color: white;
-
-  border: none;
-
-  padding: 10px 16px;
-
-  border-radius: 10px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-}
-@media (max-width: 768px) {
-
-  .topbar {
-
-    flex-direction: column;
-
-    align-items: stretch;
-  }
-
-  .month-select {
-
-    max-width: 100%;
-  }
-
-  .dashboard {
-
-    grid-template-columns: 1fr;
-
-    padding: 12px;
-  }
-
-  .card {
-
-    width: 100%;
-
-    box-sizing: border-box;
-  }
-
-  .expense-item {
-
-    flex-wrap: wrap;
-
-    gap: 10px;
-  }
-}
 /* =========================
    CATEGORY BARS
 ========================= */
@@ -358,17 +490,15 @@ body {
 
   border-radius: 999px;
 
-  transition: width 0.3s ease;
+  transition: width .3s ease;
 }
 
 /* =========================
    CATEGORY COLORS
 ========================= */
 
-/* CATEGORY COLORS */
-
 .category-Otros {
-  background: #042b6e;
+  background: #64748b;
 }
 
 .category-Hogar {
@@ -405,4 +535,76 @@ body {
 
 .category-Regalos {
   background: #eab308;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .topbar {
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .month-select {
+
+    max-width: 100%;
+  }
+
+  .dashboard {
+
+    grid-template-columns: 1fr;
+
+    padding: 12px;
+  }
+
+  .card,
+  .summary {
+
+    width: 100%;
+  }
+
+  .expense-item {
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+  }
+
+  .summary-item {
+
+    font-size: 14px;
+
+    padding: 14px;
+  }
+
+  .modal-content {
+
+    width: 92%;
+  }
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+
+  background: rgba(100,116,139,.35);
+
+  border-radius: 999px;
 }
