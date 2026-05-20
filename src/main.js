@@ -870,18 +870,3 @@ window.removeExpense = async function(id) {
 
   renderExpenses()
 }
-const scrollTopBtn =
-  document.querySelector('#scroll-top-btn')
-
-scrollTopBtn.addEventListener(
-  'click',
-  () => {
-
-    window.scrollTo({
-
-      top: 0,
-
-      behavior: 'smooth'
-    })
-  }
-)
