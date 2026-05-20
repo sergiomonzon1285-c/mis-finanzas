@@ -19,25 +19,33 @@ export function getExpenses(type) {
 }
 
 export async function addExpense(type, expense) {
+
   const newExpense = {
     ...expense,
     type
   }
 
-  await saveExpenseToDB(newExpense)
+  const savedExpense =
+    await saveExpenseToDB(newExpense)
 
-  expenses.push(newExpense)
+  if (savedExpense && savedExpense[0]) {
+
+    expenses.push(savedExpense[0])
+  }
 }
 
 export function createInstallment(
   name,
   amount,
-  installments
+  installments,
+  account
 ) {
+
   return {
     name,
     amount,
     installments,
+    account,
     start_month: getCurrentMonthKey()
   }
 }

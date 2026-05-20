@@ -139,7 +139,25 @@ document.querySelector('#app').innerHTML = `
       id="expense-amount"
       placeholder="Monto"
     >
+<select id="expense-account">
 
+  <option value="VISA">
+    VISA
+  </option>
+
+  <option value="MASTERCARD">
+    Mastercard
+  </option>
+
+  <option value="AMEX">
+    AMEX
+  </option>
+
+  <option value="EFECTIVO">
+    Efectivo
+  </option>
+
+</select>
     <input
       type="number"
       id="expense-installments"
@@ -167,6 +185,7 @@ const modalTitle = document.querySelector('#modal-title')
 
 const expenseName = document.querySelector('#expense-name')
 const expenseAmount = document.querySelector('#expense-amount')
+const expenseAccount = document.querySelector('#expense-account')
 const expenseInstallments = document.querySelector('#expense-installments')
 
 const monthSelect = document.querySelector('#month-select')
@@ -282,11 +301,12 @@ document
       return
     }
 
-    let expense = {
-      name,
-      amount,
-      created_month: selectedMonth
-    }
+   let expense = {
+  name,
+  amount,
+  account: expenseAccount.value,
+  created_month: selectedMonth
+}
 
     // =========================
     // CUOTAS
@@ -304,10 +324,11 @@ document
       }
 
       expense = createInstallment(
-        name,
-        amount,
-        installments
-      )
+  name,
+  amount,
+  installments,
+  expenseAccount.value
+)
     }
 
     // =========================
