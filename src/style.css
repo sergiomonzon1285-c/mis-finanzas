@@ -765,27 +765,30 @@ body {
 
   opacity: .9;
 }
-#scroll-top-btn {
+/* =========================
+   SUMMARY GROUPS
+========================= */
 
-  position: fixed;
+.summary-card {
 
-  bottom: 20px;
+  background: rgba(255,255,255,.45);
 
-  right: 20px;
+  border-radius: 22px;
 
-  width: 60px;
+  padding: 18px;
 
-  height: 60px;
+  display: flex;
 
-  background: red;
+  flex-direction: column;
 
-  color: white;
+  gap: 14px;
+}
 
-  border: none;
+.summary-card h3 {
 
-  border-radius: 50%;
+  font-size: 1.2rem;
 
-  font-size: 30px;
+  font-weight: 700;
 
-  z-index: 999999;
+  color: #1e293b;
 }

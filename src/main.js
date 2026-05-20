@@ -102,30 +102,43 @@ document.querySelector('#app').innerHTML = `
 
   </section>
 
-  <aside class="summary">
+  <!-- BALANCE -->
 
-    <h2>Resumen</h2>
+  <div class="summary-card">
 
-<div class="summary-item">
-  <span>Total Gastos</span>
-  <strong id="expenses-total">$0</strong>
-</div>
+    <div class="summary-item">
+      <span>Total Gastos</span>
+      <strong id="expenses-total">$0</strong>
+    </div>
 
-<div class="summary-item">
-  <span>Balance</span>
-  <strong id="global-total">$0</strong>
-  <div id="accounts-summary"></div>
-</div>
+    <div class="summary-item">
+      <span>Balance</span>
+      <strong id="balance-total">$0</strong>
+    </div>
 
-<div class="summary-item">
+  </div>
 
-  <h3>Categorías</h3>
+  <!-- TARJETAS -->
 
-</div>
+  <div class="summary-card">
 
-<div id="categories-summary"></div>
+    <h3>Tarjetas</h3>
 
-  </aside>
+    <div id="accounts-summary"></div>
+
+  </div>
+
+  <!-- CATEGORÍAS -->
+
+  <div class="summary-card">
+
+    <h3>Categorías</h3>
+
+    <div id="categories-summary"></div>
+
+  </div>
+
+</aside>
 
 </main>
 
@@ -820,7 +833,7 @@ const income =
   document.querySelector('#expenses-total').innerText =
   `$${expensesTotal.toLocaleString()}`
   
-  document.querySelector('#global-total').innerText =
+  document.querySelector('#balance-total').innerText =
     `$${total.toLocaleString()}`
 }
 
