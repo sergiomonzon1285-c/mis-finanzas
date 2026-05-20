@@ -172,7 +172,8 @@ function openModal(type) {
   if (type === 'installments') {
     modalTitle.innerText = 'Agregar cuota'
     expenseInstallments.classList.remove('hidden')
-  
+    }
+
 }
 
 modal.addEventListener('click', (e) => {
@@ -365,8 +366,19 @@ function renderInstallments() {
           </small>
         </div>
 
-        <strong>$${expense.amount.toLocaleString()}</strong>
-      </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+
+  <strong>
+    $${expense.amount.toLocaleString()}
+  </strong>
+
+  <button
+    onclick="removeExpense('${expense.id}')"
+  >
+    🗑️
+  </button>
+
+</div>
     `
   })
 
