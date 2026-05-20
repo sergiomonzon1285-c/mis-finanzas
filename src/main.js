@@ -42,6 +42,21 @@ document.querySelector('#app').innerHTML = `
 
 <main class="dashboard">
 
+  <section class="card income">
+
+    <div class="card-header">
+      <h2>Ingresos</h2>
+      <span id="income-total">$0</span>
+    </div>
+
+    <div class="expense-list" id="income-list"></div>
+
+    <button class="add-btn" id="add-income">
+      + Agregar
+    </button>
+
+  </section>
+
   <section class="card fixed">
 
     <div class="card-header">
@@ -91,10 +106,15 @@ document.querySelector('#app').innerHTML = `
 
     <h2>Resumen</h2>
 
-    <div class="summary-item">
-      <span>Total general</span>
-      <strong id="global-total">$0</strong>
-    </div>
+<div class="summary-item">
+  <span>Total Gastos</span>
+  <strong id="expenses-total">$0</strong>
+</div>
+
+<div class="summary-item">
+  <span>Balance</span>
+  <strong id="global-total">$0</strong>
+</div>
 
   </aside>
 
@@ -180,6 +200,12 @@ monthSelect.addEventListener('change', () => {
 // =========================
 
 document
+  .querySelector('#add-income')
+  .addEventListener('click', () => {
+    openModal('income')
+  })
+
+document
   .querySelector('#add-fixed')
   .addEventListener('click', () => {
     openModal('fixed')
@@ -208,7 +234,10 @@ function openModal(type) {
   modal.classList.remove('hidden')
 
   expenseInstallments.classList.add('hidden')
-
+  
+if (type === 'income') {
+  modalTitle.innerText = 'Agregar Ingreso'
+}
   if (type === 'fixed') {
     modalTitle.innerText = 'Agregar gasto fijo'
   }
@@ -308,8 +337,12 @@ document
 
 function renderExpenses() {
 
+  renderIncome()
+
   renderFixed()
+
   renderUnique()
+
   renderInstallments()
 
   updateGlobalTotal()
@@ -318,7 +351,49 @@ function renderExpenses() {
 // =========================
 // FIJOS
 // =========================
+function renderIncome() {
 
+  const list =
+    document.querySelector('#income-list')
+
+  list.innerHTML = ''
+
+  let total = 0
+
+  getExpenses('income')
+    .filter(expense =>
+      expense.created_month === selectedMonth
+    )
+    .forEach(expense => {
+
+      total += expense.amount
+
+      list.innerHTML += `
+        <div class="expense-item">
+
+          <span>${expense.name}</span>
+
+          <div style="display:flex; gap:10px; align-items:center;">
+
+            <strong>
+              $${expense.amount.toLocaleString()}
+            </strong>
+
+            <button
+              onclick="removeExpense('${expense.id}')"
+            >
+              🗑️
+            </button>
+
+          </div>
+
+        </div>
+      `
+    })
+
+  document.querySelector('#income-total').innerText =
+    `$${total.toLocaleString()}`
+}
 function renderFixed() {
 
   const list = document.querySelector('#fixed-list')
@@ -473,7 +548,12 @@ function renderInstallments() {
 // =========================
 
 function updateGlobalTotal() {
-
+const income =
+  getExpenses('income')
+    .filter(item =>
+      item.created_month === selectedMonth
+    )
+    .reduce((acc, item) => acc + item.amount, 0)
   const fixed =
     getExpenses('fixed')
       .reduce((acc, item) => acc + item.amount, 0)
@@ -489,8 +569,15 @@ function updateGlobalTotal() {
     getExpenses('installments')
       .reduce((acc, item) => acc + item.amount, 0)
 
-  const total = fixed + unique + installments
+  const expensesTotal =
+  fixed + unique + installments
 
+  const total =
+  income - expensesTotal
+  
+  document.querySelector('#expenses-total').innerText =
+  `$${expensesTotal.toLocaleString()}`
+  
   document.querySelector('#global-total').innerText =
     `$${total.toLocaleString()}`
 }
