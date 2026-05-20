@@ -4,7 +4,7 @@ import {
   addExpense,
   getExpenses,
   createInstallment,
-  loadExpenses
+  loadExpenses,
   deleteExpense
 } from './app'
 
@@ -239,7 +239,7 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
   expenseAmount.value = ''
   expenseInstallments.value = ''
 
-  // =========================git add .
+  // =========================
   // RENDER
   // =========================
   renderExpenses()
@@ -254,32 +254,45 @@ function renderExpenses() {
 }
 
 function renderFixed() {
+
   const list = document.querySelector('#fixed-list')
 
-list.innerHTML += `
-  <div class="expense-item">
+  list.innerHTML = ''
 
-    <span>${expense.name}</span>
+  let total = 0
 
-    <div style="display:flex; align-items:center; gap:10px;">
+  getExpenses('fixed').forEach(expense => {
 
-      <strong>
-        $${expense.amount.toLocaleString()}
-      </strong>
+    total += expense.amount
 
-      <button
-        onclick="removeExpense('${expense.id}')"
-      >
-        🗑️
-      </button>
+    list.innerHTML += `
+      <div class="expense-item">
 
-    </div>
+        <span>${expense.name}</span>
 
-  </div>
-`
-  }
+        <div style="display:flex; align-items:center; gap:10px;">
 
+          <strong>
+            $${expense.amount.toLocaleString()}
+          </strong>
+
+          <button
+            onclick="removeExpense('${expense.id}')"
+          >
+            🗑️
+          </button>
+
+        </div>
+
+      </div>
+    `
+  })
+
+  document.querySelector('#fixed-total').innerText =
+    `$${total.toLocaleString()}`
+}
 function renderUnique() {
+
   const list = document.querySelector('#unique-list')
 
   list.innerHTML = ''
@@ -289,15 +302,35 @@ function renderUnique() {
   getExpenses('unique')
     .filter(expense => expense.created_month === selectedMonth)
     .forEach(expense => {
+
       total += expense.amount
 
       list.innerHTML += `
         <div class="expense-item">
+
           <span>${expense.name}</span>
-          <strong>$${expense.amount.toLocaleString()}</strong>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+
+            <strong>
+              $${expense.amount.toLocaleString()}
+            </strong>
+
+            <button
+              onclick="removeExpense('${expense.id}')"
+            >
+              🗑️
+            </button>
+
+          </div>
+
         </div>
       `
     })
+
+  document.querySelector('#unique-total').innerText =
+    `$${total.toLocaleString()}`
+}
 
   document.querySelector('#unique-total').innerText =
     `$${total.toLocaleString()}`
