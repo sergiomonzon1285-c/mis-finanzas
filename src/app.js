@@ -1,6 +1,7 @@
 import {
   getExpensesFromDB,
-  saveExpenseToDB
+  saveExpenseToDB,
+  deleteExpenseFromDB
 } from './storage'
 
 import { getCurrentMonthKey } from './months'
@@ -39,4 +40,12 @@ export function createInstallment(
     installments,
     start_month: getCurrentMonthKey()
   }
+}
+export async function deleteExpense(id) {
+
+  await deleteExpenseFromDB(id)
+
+  expenses = expenses.filter(
+    expense => expense.id !== id
+  )
 }
