@@ -16,11 +16,24 @@ import {
 document.querySelector('#app').innerHTML = `
 <div class="app">
 
-  <header class="topbar">
-    <h1>💸 Mis Finanzas</h1>
+<header class="topbar">
 
-    <select class="month-select" id="month-select"></select>
-  </header>
+  <h1>💸 Mis Finanzas</h1>
+
+  <div style="display:flex; gap:10px; align-items:center;">
+
+    <button id="refresh-btn">
+      🔄 Refrescar
+    </button>
+
+    <select
+      class="month-select"
+      id="month-select"
+    ></select>
+
+  </div>
+
+</header>
 
   <main class="dashboard">
 
@@ -353,3 +366,13 @@ async function start() {
 }
 
 start()
+document
+  .querySelector('#refresh-btn')
+  .addEventListener('click', async () => {
+
+    await loadExpenses()
+
+    renderExpenses()
+
+    alert('Datos actualizados')
+})

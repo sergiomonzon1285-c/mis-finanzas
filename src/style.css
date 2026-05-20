@@ -211,3 +211,19 @@ body {
 .hidden {
   display: none;
 }
+#refresh-btn {
+
+  background: #2563eb;
+  color: white;
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 10px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+}
