@@ -256,27 +256,28 @@ function renderExpenses() {
 function renderFixed() {
   const list = document.querySelector('#fixed-list')
 
-  list.innerHTML = ''
+list.innerHTML += `
+  <div class="expense-item">
 
-  let total = 0
+    <span>${expense.name}</span>
 
-  getExpenses('fixed').forEach(expense => {
-    total += expense.amount
+    <div style="display:flex; align-items:center; gap:10px;">
 
-    list.innerHTML += `
-      <div class="expense-item">
-        <span>${expense.name}</span>
-        <strong>$${expense.amount.toLocaleString()}</strong>
-      </div>
-      <button onclick="removeExpense('${expense.id}')">
-  🗑️
-</button>
-    `
-  })
+      <strong>
+        $${expense.amount.toLocaleString()}
+      </strong>
 
-  document.querySelector('#fixed-total').innerText =
-    `$${total.toLocaleString()}`
-}
+      <button
+        onclick="removeExpense('${expense.id}')"
+      >
+        🗑️
+      </button>
+
+    </div>
+
+  </div>
+`
+  }
 
 function renderUnique() {
   const list = document.querySelector('#unique-list')
