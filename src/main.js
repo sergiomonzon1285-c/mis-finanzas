@@ -1326,14 +1326,11 @@ function renderAccountsSummary() {
 function renderCategoriesSummary() {
 
   const container =
-    document.querySelector(
-      '#categories-summary'
-    )
+    document.querySelector('#categories-summary')
 
   container.innerHTML = ''
 
   const expenses = [
-
     ...getExpenses('fixed'),
 
     ...getExpenses('unique')
@@ -1361,77 +1358,87 @@ function renderCategoriesSummary() {
   ]
 
   const totals = {}
-
   let grandTotal = 0
 
   expenses.forEach(expense => {
 
-    const category =
-      expense.category || 'Otros'
+    const category = expense.category || 'Otros'
 
     if (!totals[category]) {
-
       totals[category] = 0
     }
 
     totals[category] += expense.amount
-
     grandTotal += expense.amount
   })
 
-  Object.entries(totals).forEach(
-    ([category, total]) => {
+  const categoryColors = {
+    Otros: '#64748b',
+    Hogar: '#3b82f6',
+    Ropa: '#ec4899',
+    Supermercado: '#22c55e',
+    Mantenimiento: '#f59e0b',
+    Vehiculos: '#9c0909',
+    Ocio: '#8b5cf6',
+    Ayudas: '#06b6d4',
+    Familia: '#14b8a6',
+    Regalos: '#eab308'
+  }
 
+  const sortedCategories = Object.entries(totals)
+    .map(([category, total]) => {
       const percent =
         grandTotal > 0
-          ? Math.round(
-              (total / grandTotal) * 100
-            )
+          ? (total / grandTotal) * 100
           : 0
 
-      const safePercent =
-        Math.max(percent, 4)
+      return {
+        category,
+        total,
+        percent
+      }
+    })
+    .sort((a, b) => b.percent - a.percent)
 
-      const safeCategory =
-        category
-          .replace(/\s/g, '')
-          .replace('/', '')
+  sortedCategories.forEach(({ category, total, percent }) => {
 
-      container.innerHTML += `
+    const safePercent = Math.max(Math.round(percent), 4)
 
-        <div class="summary-item category-item">
+    const safeCategory = category
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s/g, '')
+      .replace(/\//g, '')
 
-          <div class="category-header">
+    const barColor =
+      categoryColors[safeCategory] || '#64748b'
 
-            <div>
+    container.innerHTML += `
+      <div class="summary-item category-item">
 
-              <span>${category}</span>
+        <div class="category-header">
 
-              <small>
-                ${percent}%
-              </small>
-
-            </div>
-
-            <strong>
-              $${total.toLocaleString()}
-            </strong>
-
+          <div>
+            <span>${category}</span>
+            <small>${Math.round(percent)}%</small>
           </div>
 
-          <div class="category-bar">
-
-            <div
-              class="category-fill category-${safeCategory}"
-              style="width:${safePercent}%"
-            ></div>
-
-          </div>
+          <strong>
+            $${total.toLocaleString()}
+          </strong>
 
         </div>
-      `
-    }
-  )
+
+        <div class="category-bar">
+          <div
+            class="category-fill"
+            style="width:${safePercent}%; background:${barColor};"
+          ></div>
+        </div>
+
+      </div>
+    `
+  })
 }
 
 function updateGlobalTotal() {
