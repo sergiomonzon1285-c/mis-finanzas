@@ -40,19 +40,6 @@ body {
    APP
 ========================= */
 
-.app {
-
-  width: 100%;
-
-  max-width: 1400px;
-
-  margin: auto;
-
-  padding: 12px;
-
-  box-sizing: border-box;
-}
-
 /* =========================
    TOPBAR
 ========================= */
@@ -140,7 +127,6 @@ body {
 .dashboard {
 
   position: relative;
-overflow: hidden;
 
   width: 100%;
 
@@ -374,17 +360,6 @@ overflow: hidden;
    CATEGORY BARS
 ========================= */
 
-.category-item {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 10px;
-
-  margin-bottom: 16px;
-}
-
 .category-header {
 
   display: flex;
@@ -403,11 +378,14 @@ overflow: hidden;
 
 .category-fill {
 
-  height: 10px;
+  height: 100%;
+
+  min-width: 8px;
 
   border-radius: 999px;
 
-  transition: width .3s ease;
+  transition:
+    width .3s ease;
 }
 
 /* =========================
@@ -435,7 +413,7 @@ overflow: hidden;
 }
 
 .category-Vehiculos {
-  background: #ef4444;
+  background: #9c0909;
 }
 
 .category-Ocio {
@@ -555,11 +533,6 @@ overflow: hidden;
 ========================= */
 
 @media (max-width: 768px) {
-
-  .app {
-
-    padding: 10px;
-  }
 
   .topbar {
 
@@ -707,15 +680,18 @@ overflow: hidden;
 
   width: 100%;
 
-  height: 10px;
-}
+  height: 12px;
 
-.category-fill {
-
-  height: 10px;
+  background:
+    rgba(226,232,240,.9);
 
   border-radius: 999px;
+
+  overflow: hidden;
+
+  margin-top: 8px;
 }
+
 /* =========================
    SCROLL TO TOP
 ========================= */
@@ -895,38 +871,7 @@ overflow: hidden;
 .category-AhorroInversión {
   background: #6366f1;
 }
-.tabs {
 
-  display: flex;
-
-  gap: 10px;
-
-  margin-bottom: 20px;
-}
-
-.tab-btn {
-
-  border: none;
-
-  padding: 12px 20px;
-
-  border-radius: 12px;
-
-  cursor: pointer;
-
-  font-weight: 700;
-
-  background: white;
-
-  color: #333;
-}
-
-.tab-btn.active {
-
-  background: #4f46e5;
-
-  color: white;
-}
 .page-section {
 
   transition:
@@ -981,6 +926,9 @@ overflow: hidden;
 
   box-shadow:
     0 4px 20px rgba(15,23,42,.06);
+
+    box-sizing: border-box;
+
 }
 
 /* =========================
@@ -989,7 +937,14 @@ overflow: hidden;
 
 .app {
 
-  padding-top: 160px;
+  width: 100%;
+
+  max-width: 1400px;
+
+  margin: auto;
+
+  padding:
+    230px 12px 12px;
 }
 
 /* =========================
@@ -1130,8 +1085,8 @@ overflow: hidden;
 
   .app {
 
-    padding-top: 185px;
-  }
+  padding-top: 185px;
+}
 
   .topbar {
 

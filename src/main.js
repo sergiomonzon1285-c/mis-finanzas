@@ -350,12 +350,12 @@ document.querySelector('#app').innerHTML = `
 
 </select>
 
-    <input
-      type="number"
-      id="expense-installments"
-      placeholder="Cantidad de cuotas"
-      class="hidden"
-    >
+  <input
+  type="number"
+  id="expense-installments"
+  placeholder="Cantidad de cuotas"
+  class="hidden-section"
+>
 
     <button id="save-expense">
       Guardar
@@ -420,8 +420,8 @@ const expenseCategories = {
       🔧 Mantenimiento
     </option>
 
-    <option value="Vehículos">
-      🚗 Vehículos
+    <option value="Vehiculos">
+      🚗 Vehiculos
     </option>
 
     <option value="Ocio">
@@ -535,78 +535,58 @@ document
 
 function openModal(type) {
 
- expenseAccount.style.display =
-  'block'
+  currentType = type
 
-expenseName.style.display =
-  'block'
+  expenseAccount.value = 'Visa'
+  expenseName.value = ''
+  expenseAmount.value = ''
+  expenseInstallments.value = ''
 
-  expenseCurrency.classList.add('hidden-section')
+  expenseAccount.style.display = 'block'
+  expenseName.style.display = 'block'
+
+  // Sacamos el hidden fuerte para poder controlar con style.display
+  expenseCurrency.classList.remove('hidden-section')
+  expenseInstallments.classList.remove('hidden-section')
+
+  expenseCurrency.style.display = 'none'
+  expenseInstallments.style.display = 'none'
 
   expenseCurrency.value = 'ARS'
 
-  currentType = type
-
-  expenseName.value = ''
-
-expenseAmount.value = ''
-
-expenseInstallments.value = ''
-
-expenseAccount.value = 'Visa'
-
-if (type === 'investments') {
-
-  expenseCurrency.value = 'USD'
-
-  expenseCurrency.classList.remove(
-  'hidden'
-)
-  expenseCategory.innerHTML =
-    expenseCategories.investments
-
-  expenseCategory.selectedIndex = 0
-
-  expenseAccount.style.display =
-    'none'
-
-  expenseName.style.display =
-    'none'
-
-} else {
-
-  expenseCategory.innerHTML =
-  expenseCategories.expenses
-
-expenseCategory.selectedIndex = 0
-}
-
   modal.classList.remove('hidden')
-
-  expenseInstallments.classList.add('hidden-section')
+  modal.classList.remove('hidden-section')
 
   if (type === 'investments') {
 
-  modalTitle.innerText =
-    'Agregar inversión'
-}
-  
-if (type === 'income') {
-  modalTitle.innerText = 'Agregar Ingreso'
-}
-  if (type === 'fixed') {
-    modalTitle.innerText = 'Agregar gasto fijo'
-  }
+    modalTitle.innerText = 'Agregar inversión'
 
-  if (type === 'unique') {
-    modalTitle.innerText = 'Agregar gasto único'
-  }
+    expenseCurrency.value = 'USD'
+    expenseCurrency.style.display = 'block'
 
-  if (type === 'installments') {
+    expenseCategory.innerHTML = expenseCategories.investments
+    expenseCategory.selectedIndex = 0
 
-    modalTitle.innerText = 'Agregar cuota'
+    expenseAccount.style.display = 'none'
+    expenseName.style.display = 'none'
 
-    expenseInstallments.classList.remove('hidden')
+  } else {
+
+    if (type === 'income') {
+      modalTitle.innerText = 'Agregar Ingreso'
+    } else if (type === 'fixed') {
+      modalTitle.innerText = 'Agregar gasto fijo'
+    } else if (type === 'unique') {
+      modalTitle.innerText = 'Agregar gasto único'
+    } else if (type === 'installments') {
+      modalTitle.innerText = 'Agregar cuota'
+      expenseInstallments.style.display = 'block'
+    } else {
+      modalTitle.innerText = 'Agregar'
+    }
+
+    expenseCategory.innerHTML = expenseCategories.expenses
+    expenseCategory.selectedIndex = 0
   }
 }
 
@@ -617,7 +597,7 @@ if (type === 'income') {
 modal.addEventListener('click', (e) => {
 
   if (e.target.id === 'modal') {
-    modal.classList.add('hidden-section')
+    modal.classList.add('hidden')
   }
 })
 
@@ -714,7 +694,7 @@ editingId = null
     expenseAmount.value = ''
     expenseInstallments.value = ''
 
-    modal.classList.add('hidden-section')
+    modal.classList.add('hidden')
 
     renderExpenses()
   })
@@ -1346,7 +1326,9 @@ function renderAccountsSummary() {
 function renderCategoriesSummary() {
 
   const container =
-    document.querySelector('#categories-summary')
+    document.querySelector(
+      '#categories-summary'
+    )
 
   container.innerHTML = ''
 
@@ -1371,7 +1353,10 @@ function renderCategoriesSummary() {
         const remaining =
           expense.installments - monthsPassed
 
-        return remaining > 0 && monthsPassed >= 0
+        return (
+          remaining > 0 &&
+          monthsPassed >= 0
+        )
       })
   ]
 
@@ -1385,6 +1370,7 @@ function renderCategoriesSummary() {
       expense.category || 'Otros'
 
     if (!totals[category]) {
+
       totals[category] = 0
     }
 
@@ -1397,44 +1383,53 @@ function renderCategoriesSummary() {
     ([category, total]) => {
 
       const percent =
-        ((total / grandTotal) * 100)
-          .toFixed(0)
+        grandTotal > 0
+          ? Math.round(
+              (total / grandTotal) * 100
+            )
+          : 0
 
-container.innerHTML += `
+      const safePercent =
+        Math.max(percent, 4)
 
-  <div class="summary-item category-item">
+      const safeCategory =
+        category
+          .replace(/\s/g, '')
+          .replace('/', '')
 
-    <div class="category-header">
+      container.innerHTML += `
 
-      <div>
+        <div class="summary-item category-item">
 
-        <span>${category}</span>
+          <div class="category-header">
 
-        <small>
-          ${percent}%
-        </small>
+            <div>
 
-      </div>
+              <span>${category}</span>
 
-      <strong>
-        $${total.toLocaleString()}
-      </strong>
+              <small>
+                ${percent}%
+              </small>
 
-    </div>
+            </div>
 
-    <div class="category-bar">
+            <strong>
+              $${total.toLocaleString()}
+            </strong>
 
-     <div
-  class="category-fill category-${category
-    .replace(/\s/g, '')
-    .replace('/', '')}"
-  style="width:${percent}%"
-></div>
+          </div>
 
-    </div>
+          <div class="category-bar">
 
-  </div>
-`
+            <div
+              class="category-fill category-${safeCategory}"
+              style="width:${safePercent}%"
+            ></div>
+
+          </div>
+
+        </div>
+      `
     }
   )
 }
@@ -1599,28 +1594,6 @@ patrimonyTab.addEventListener(
         duration: 350,
         easing: 'ease'
       }
-    )
-
-    patrimonyTab.classList.add(
-      'active'
-    )
-
-    dashboardTab.classList.remove(
-      'active'
-    )
-  }
-)
-
-patrimonyTab.addEventListener(
-  'click',
-  () => {
-
-    patrimonySection.classList.remove(
-      'hidden'
-    )
-
-    dashboardSection.classList.add(
-      'hidden'
     )
 
     patrimonyTab.classList.add(
