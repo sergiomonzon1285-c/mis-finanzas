@@ -40,7 +40,27 @@ document.querySelector('#app').innerHTML = `
 
 </header>
 
+<div class="tabs">
+
+  <button
+    class="tab-btn active"
+    id="dashboard-tab"
+  >
+    📊 Dashboard
+  </button>
+
+  <button
+    class="tab-btn"
+    id="patrimony-tab"
+  >
+    💼 Patrimonio
+  </button>
+
+</div>
+
 <main class="dashboard">
+
+<div id="dashboard-section">
 
   <section class="card income">
 
@@ -105,6 +125,7 @@ document.querySelector('#app').innerHTML = `
   <!-- BALANCE -->
 
   <div class="summary-card">
+  <h3>Balance</h3>
 
     <div class="summary-item">
       <span>Total Gastos</span>
@@ -112,7 +133,7 @@ document.querySelector('#app').innerHTML = `
     </div>
 
     <div class="summary-item">
-      <span>Balance</span>
+      <span>Resto</span>
       <strong id="balance-total">$0</strong>
     </div>
 
@@ -138,6 +159,13 @@ document.querySelector('#app').innerHTML = `
 
   </div>
 
+  </div>
+
+<div
+  id="patrimony-section"
+  class="hidden"
+>
+
 <section class="investments-section">
 
   <div class="investments-header">
@@ -145,7 +173,7 @@ document.querySelector('#app').innerHTML = `
     <div>
 
   <h2>
-    💼 Ahorros e Inversiones
+    💼 Patrimonio
   </h2>
 
   <small id="dollar-rate">
@@ -153,10 +181,6 @@ document.querySelector('#app').innerHTML = `
   </small>
 
 </div>
-
-    <span id="investments-total">
-      $0
-    </span>
 
   </div>
 
@@ -179,6 +203,8 @@ document.querySelector('#app').innerHTML = `
   </button>
 
 </section>
+
+</div>
 
 </main>
 
@@ -800,8 +826,6 @@ function renderInvestments() {
       `
     })
 
-  document.querySelector('#investments-total').innerText =
-    `$${total.toLocaleString()}`
 }
 
 function renderUnique() {
@@ -858,7 +882,7 @@ function renderUnique() {
 // =========================
 
 function renderInvestmentsSummary() {
-  
+
   const container =
     document.querySelector(
       '#investments-summary'
@@ -866,64 +890,90 @@ function renderInvestmentsSummary() {
 
   container.innerHTML = ''
 
- const investments =
-  getExpenses('investments')
+  const investments =
+    getExpenses('investments')
 
-  const totals = {}
-
-  let grandTotal = 0
+  const grouped = {}
 
   investments.forEach(item => {
 
     const category =
       item.category || 'Otros'
 
-    if (!totals[category]) {
-      totals[category] = 0
+    if (!grouped[category]) {
+
+      grouped[category] = {
+        ARS: 0,
+        USD: 0
+      }
     }
 
-    totals[category] += item.amount
+    if (item.currency === 'USD') {
 
-    grandTotal += item.amount
+      grouped[category].USD +=
+        item.amount
+
+    } else {
+
+      grouped[category].ARS +=
+        item.amount
+    }
   })
 
-  Object.entries(totals).forEach(
-    ([category, total]) => {
+  Object.entries(grouped).forEach(
+    ([category, values]) => {
 
-      const percent =
-        ((total / grandTotal) * 100)
-          .toFixed(0)
+      let emoji = '💼'
+
+      if (category === 'Acciones') {
+        emoji = '📈'
+      }
+
+      if (category === 'Crypto') {
+        emoji = '🪙'
+      }
+
+      if (category === 'Plazo Fijo') {
+        emoji = '🏦'
+      }
+
+      if (category === 'Fondos Comunes') {
+        emoji = '📊'
+      }
+
+      if (category === 'Dólares') {
+        emoji = '💵'
+      }
 
       container.innerHTML += `
 
-        <div class="summary-item category-item">
+        <div class="summary-card">
 
-          <div class="category-header">
+          <h3>
+            ${emoji} ${category}
+          </h3>
 
-            <div>
+          <div class="summary-item">
 
-              <span>${category}</span>
-
-              <small>
-                ${percent}%
-              </small>
-
-            </div>
+            <span>
+              ARS
+            </span>
 
             <strong>
-              $${total.toLocaleString()}
+              $${values.ARS.toLocaleString()}
             </strong>
 
           </div>
 
-          <div class="category-bar">
+          <div class="summary-item">
 
-            <div
-  class="category-fill category-${category
-    .replace(/\s/g, '')
-    .replace('/', '')}"
-  style="width:${percent}%"
-></div>
+            <span>
+              USD
+            </span>
+
+            <strong>
+              ${values.USD.toLocaleString()} USD
+            </strong>
 
           </div>
 
@@ -1371,6 +1421,70 @@ async function loadDollarRate() {
 }
 
 async function start() {
+
+  const dashboardTab =
+  document.querySelector(
+    '#dashboard-tab'
+  )
+
+const patrimonyTab =
+  document.querySelector(
+    '#patrimony-tab'
+  )
+
+const dashboardSection =
+  document.querySelector(
+    '#dashboard-section'
+  )
+
+const patrimonySection =
+  document.querySelector(
+    '#patrimony-section'
+  )
+
+dashboardTab.addEventListener(
+  'click',
+  () => {
+
+    dashboardSection.classList.remove(
+      'hidden'
+    )
+
+    patrimonySection.classList.add(
+      'hidden'
+    )
+
+    dashboardTab.classList.add(
+      'active'
+    )
+
+    patrimonyTab.classList.remove(
+      'active'
+    )
+  }
+)
+
+patrimonyTab.addEventListener(
+  'click',
+  () => {
+
+    patrimonySection.classList.remove(
+      'hidden'
+    )
+
+    dashboardSection.classList.add(
+      'hidden'
+    )
+
+    patrimonyTab.classList.add(
+      'active'
+    )
+
+    dashboardTab.classList.remove(
+      'active'
+    )
+  }
+)
 
   await loadDollarRate()
 
