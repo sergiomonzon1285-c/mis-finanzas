@@ -239,10 +239,18 @@ let currentType = null
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
 
-const expenseName = document.querySelector('#expense-name')
-const expenseAmount = document.querySelector('#expense-amount')
-const expenseAccount = document.querySelector('#expense-account')
-const expenseCategory = document.querySelector('#expense-category')
+const expenseName =
+  document.querySelector('#expense-name')
+
+const expenseAmount =
+  document.querySelector('#expense-amount')
+
+const expenseAccount =
+  document.querySelector('#expense-account')
+
+const expenseCategory =
+  document.querySelector('#expense-category')
+
 const expenseCategories = {
 
   expenses: `
@@ -371,7 +379,7 @@ document
     openModal('unique')
   })
 
-  document
+document
   .querySelector('#add-investment')
   .addEventListener('click', () => {
 
@@ -384,12 +392,24 @@ document
 
 function openModal(type) {
 
+ expenseAccount.style.display =
+  'block'
+
+expenseName.style.display =
+  'block'
+
   currentType = type
 
-  if (type === 'investment') {
+if (type === 'investment') {
 
   expenseCategory.innerHTML =
     expenseCategories.investments
+
+  expenseAccount.style.display =
+    'none'
+
+  expenseName.style.display =
+    'none'
 
 } else {
 
@@ -445,7 +465,10 @@ document
   .querySelector('#save-expense')
   .addEventListener('click', async () => {
 
-    const name = expenseName.value.trim()
+    const name =
+  currentType === 'investment'
+    ? expenseCategory.value
+    : expenseName.value.trim()
 
     const amount = Number(expenseAmount.value)
 
@@ -631,10 +654,8 @@ function renderInvestments() {
 
   let total = 0
 
-  getExpenses('investment')
-    .filter(expense =>
-      expense.created_month === selectedMonth
-    )
+ getExpenses('investment')
+
     .forEach(expense => {
 
       total += expense.amount
@@ -735,11 +756,8 @@ function renderInvestmentsSummary() {
 
   container.innerHTML = ''
 
-  const investments =
-    getExpenses('investment')
-      .filter(item =>
-        item.created_month === selectedMonth
-      )
+ const investments =
+  getExpenses('investment')
 
   const totals = {}
 
