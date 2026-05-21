@@ -60,7 +60,10 @@ document.querySelector('#app').innerHTML = `
 
 <main class="dashboard">
 
-<div id="dashboard-section">
+<div
+  id="dashboard-section"
+  class="page-section"
+>
 
   <section class="card income">
 
@@ -163,7 +166,10 @@ document.querySelector('#app').innerHTML = `
 
 <div
   id="patrimony-section"
-  class="hidden"
+  class="
+    page-section
+    hidden-section
+  "
 >
 
 <section class="investments-section">
@@ -456,7 +462,7 @@ function openModal(type) {
 expenseName.style.display =
   'block'
 
-  expenseCurrency.classList.add('hidden')
+  expenseCurrency.classList.add('hidden-section')
 
   expenseCurrency.value = 'ARS'
 
@@ -498,7 +504,7 @@ expenseCategory.selectedIndex = 0
 
   modal.classList.remove('hidden')
 
-  expenseInstallments.classList.add('hidden')
+  expenseInstallments.classList.add('hidden-section')
 
   if (type === 'investments') {
 
@@ -532,7 +538,7 @@ if (type === 'income') {
 modal.addEventListener('click', (e) => {
 
   if (e.target.id === 'modal') {
-    modal.classList.add('hidden')
+    modal.classList.add('hidden-section')
   }
 })
 
@@ -629,7 +635,7 @@ editingId = null
     expenseAmount.value = ''
     expenseInstallments.value = ''
 
-    modal.classList.add('hidden')
+    modal.classList.add('hidden-section')
 
     renderExpenses()
   })
@@ -1446,12 +1452,32 @@ dashboardTab.addEventListener(
   'click',
   () => {
 
-    dashboardSection.classList.remove(
-      'hidden'
+    patrimonySection.classList.add(
+      'hidden-section'
     )
 
-    patrimonySection.classList.add(
-      'hidden'
+    dashboardSection.classList.remove(
+      'hidden-section'
+    )
+
+    dashboardSection.animate(
+      [
+        {
+          opacity: 0,
+          transform:
+            'translateX(50px)'
+        },
+
+        {
+          opacity: 1,
+          transform:
+            'translateX(0)'
+        }
+      ],
+      {
+        duration: 350,
+        easing: 'ease'
+      }
     )
 
     dashboardTab.classList.add(
@@ -1459,6 +1485,48 @@ dashboardTab.addEventListener(
     )
 
     patrimonyTab.classList.remove(
+      'active'
+    )
+  }
+)
+
+patrimonyTab.addEventListener(
+  'click',
+  () => {
+
+    dashboardSection.classList.add(
+      'hidden-section'
+    )
+
+    patrimonySection.classList.remove(
+      'hidden-section'
+    )
+
+    patrimonySection.animate(
+      [
+        {
+          opacity: 0,
+          transform:
+            'translateX(50px)'
+        },
+
+        {
+          opacity: 1,
+          transform:
+            'translateX(0)'
+        }
+      ],
+      {
+        duration: 350,
+        easing: 'ease'
+      }
+    )
+
+    patrimonyTab.classList.add(
+      'active'
+    )
+
+    dashboardTab.classList.remove(
       'active'
     )
   }

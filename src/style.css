@@ -139,6 +139,9 @@ body {
 
 .dashboard {
 
+  position: relative;
+overflow: hidden;
+
   width: 100%;
 
   display: grid;
@@ -923,4 +926,29 @@ body {
   background: #4f46e5;
 
   color: white;
+}
+.page-section {
+
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+  display: block;
+}
+
+.hidden-section {
+
+  opacity: 0;
+
+  transform: translateX(50px);
+
+  pointer-events: none;
+
+  position: absolute;
+
+  width: 100%;
 }
