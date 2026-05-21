@@ -142,9 +142,17 @@ document.querySelector('#app').innerHTML = `
 
   <div class="investments-header">
 
-    <h2>
-      💼 Ahorros e Inversiones
-    </h2>
+    <div>
+
+  <h2>
+    💼 Ahorros e Inversiones
+  </h2>
+
+  <small id="dollar-rate">
+    USD $0
+  </small>
+
+</div>
 
     <span id="investments-total">
       $0
@@ -154,6 +162,10 @@ document.querySelector('#app').innerHTML = `
 
   <div id="investments-summary"></div>
 
+  <div id="investments-real-summary"></div>
+
+  <div id="investments-converted-summary"></div>
+
   <div
     class="expense-list"
     id="investments-list"
@@ -161,7 +173,7 @@ document.querySelector('#app').innerHTML = `
 
   <button
     class="add-btn"
-    id="add-investment"
+    id="add-investments"
   >
     + Agregar inversión
   </button>
@@ -212,6 +224,21 @@ document.querySelector('#app').innerHTML = `
 
 <select id="expense-category"></select>
 
+<select
+  id="expense-currency"
+  class="hidden"
+>
+
+  <option value="ARS">
+    🇦🇷 Pesos ARS
+  </option>
+
+  <option value="USD">
+    🇺🇸 Dólares USD
+  </option>
+
+</select>
+
     <input
       type="number"
       id="expense-installments"
@@ -250,6 +277,9 @@ const expenseAccount =
 
 const expenseCategory =
   document.querySelector('#expense-category')
+
+const expenseCurrency =
+  document.querySelector('#expense-currency')  
 
 const expenseCategories = {
 
@@ -329,6 +359,8 @@ const monthSelect = document.querySelector('#month-select')
 
 let selectedMonth = getCurrentMonthKey()
 
+let dollarRate = 1230
+
 // =========================
 // SELECTOR MESES
 // =========================
@@ -380,10 +412,10 @@ document
   })
 
 document
-  .querySelector('#add-investment')
+  .querySelector('#add-investments')
   .addEventListener('click', () => {
 
-    openModal('investment')
+    openModal('investments')
   })
 
 // =========================
@@ -398,6 +430,10 @@ function openModal(type) {
 expenseName.style.display =
   'block'
 
+  expenseCurrency.classList.add('hidden')
+
+  expenseCurrency.value = 'ARS'
+
   currentType = type
 
   expenseName.value = ''
@@ -406,14 +442,19 @@ expenseAmount.value = ''
 
 expenseInstallments.value = ''
 
-expenseCategory.value = ''
-
 expenseAccount.value = 'Visa'
 
-if (type === 'investment') {
+if (type === 'investments') {
 
+  expenseCurrency.value = 'USD'
+
+  expenseCurrency.classList.remove(
+  'hidden'
+)
   expenseCategory.innerHTML =
     expenseCategories.investments
+
+  expenseCategory.selectedIndex = 0
 
   expenseAccount.style.display =
     'none'
@@ -424,14 +465,16 @@ if (type === 'investment') {
 } else {
 
   expenseCategory.innerHTML =
-    expenseCategories.expenses
+  expenseCategories.expenses
+
+expenseCategory.selectedIndex = 0
 }
 
   modal.classList.remove('hidden')
 
   expenseInstallments.classList.add('hidden')
 
-  if (type === 'investment') {
+  if (type === 'investments') {
 
   modalTitle.innerText =
     'Agregar inversión'
@@ -475,23 +518,35 @@ document
   .querySelector('#save-expense')
   .addEventListener('click', async () => {
 
-    const name =
-  currentType === 'investment'
-    ? expenseCategory.value
-    : expenseName.value.trim()
+let name = ''
+
+if (currentType === 'investments') {
+
+  name = expenseCategory.value
+
+} else {
+
+  name = expenseName.value.trim()
+}
 
     const amount = Number(expenseAmount.value)
 
-    if (!name || !amount) {
-      alert('Completá nombre y monto')
-      return
-    }
+  if (
+  (!name && currentType !== 'investments')
+  || !amount
+) {
+
+  alert('Completá nombre y monto')
+
+  return
+}
 
    let expense = {
   name,
   amount,
   account: expenseAccount.value,
   category: expenseCategory.value,
+  currency: expenseCurrency.value || 'ARS',
   created_month: selectedMonth
 }
 
@@ -532,6 +587,9 @@ if (editingId) {
 
 await addExpense(currentType, expense)
 
+console.log(currentType)
+console.log(expense)
+
 editingId = null
 
     await loadExpenses()
@@ -565,6 +623,10 @@ function renderExpenses() {
   renderInvestments()
 
   renderInvestmentsSummary()
+
+  renderRealCurrencySummary()
+
+  renderConvertedInvestmentsSummary()
 
   renderInstallments()
 
@@ -686,7 +748,7 @@ function renderInvestments() {
 
   let total = 0
 
- getExpenses('investment')
+ getExpenses('investments')
 
     .forEach(expense => {
 
@@ -713,11 +775,15 @@ function renderInvestments() {
           ">
 
        <strong>
-  $${expense.amount.toLocaleString()}
+
+  ${expense.currency || 'ARS'}
+
+  ${expense.amount.toLocaleString()}
+
 </strong>
 
 <button
-  onclick="editExpense('${expense.id}', 'investment')"
+  onclick="editExpense('${expense.id}', 'investments')"
 >
   ✏️
 </button>
@@ -792,7 +858,7 @@ function renderUnique() {
 // =========================
 
 function renderInvestmentsSummary() {
-
+  
   const container =
     document.querySelector(
       '#investments-summary'
@@ -801,7 +867,7 @@ function renderInvestmentsSummary() {
   container.innerHTML = ''
 
  const investments =
-  getExpenses('investment')
+  getExpenses('investments')
 
   const totals = {}
 
@@ -865,6 +931,148 @@ function renderInvestmentsSummary() {
       `
     }
   )
+}
+
+function renderRealCurrencySummary() {
+
+  const container =
+    document.querySelector(
+      '#investments-real-summary'
+    )
+
+  container.innerHTML = ''
+
+  const investments =
+    getExpenses('investments')
+
+  let arsTotal = 0
+
+  let usdTotal = 0
+
+  investments.forEach(item => {
+
+    if (item.currency === 'USD') {
+
+      usdTotal += item.amount
+
+    } else {
+
+      arsTotal += item.amount
+    }
+  })
+
+  container.innerHTML = `
+
+    <div class="summary-card">
+
+      <div class="summary-item">
+
+        <span>
+          🇦🇷 Pesos reales
+        </span>
+
+        <strong>
+          $${arsTotal.toLocaleString()}
+        </strong>
+
+      </div>
+
+      <div class="summary-item">
+
+        <span>
+          🇺🇸 Dólares reales
+        </span>
+
+        <strong>
+          ${usdTotal.toLocaleString()} USD
+        </strong>
+
+      </div>
+
+    </div>
+  `
+}
+
+function renderConvertedInvestmentsSummary() {
+
+  const dollarElement =
+    document.querySelector(
+      '#dollar-rate'
+    )
+
+  if (dollarElement) {
+
+    dollarElement.innerText =
+      `USD $${dollarRate}`
+  }
+
+  const container =
+    document.querySelector(
+      '#investments-converted-summary'
+    )
+
+  if (!container) return
+
+  container.innerHTML = ''
+
+  const investments =
+    getExpenses('investments') || []
+
+  let arsTotal = 0
+
+  let usdTotal = 0
+
+  investments.forEach(item => {
+
+    const amount =
+      Number(item.amount) || 0
+
+    if (item.currency === 'USD') {
+
+      usdTotal += amount
+
+      arsTotal +=
+        amount * dollarRate
+
+    } else {
+
+      arsTotal += amount
+
+      usdTotal +=
+        amount / dollarRate
+    }
+  })
+
+  container.innerHTML = `
+
+    <div class="summary-card">
+
+      <div class="summary-item">
+
+        <span>
+          💰 Total en pesos
+        </span>
+
+        <strong>
+          $${arsTotal.toLocaleString()}
+        </strong>
+
+      </div>
+
+      <div class="summary-item">
+
+        <span>
+          💵 Total en dólares
+        </span>
+
+        <strong>
+          ${usdTotal.toFixed(2)} USD
+        </strong>
+
+      </div>
+
+    </div>
+  `
 }
 
 function renderInstallments() {
@@ -1134,7 +1342,37 @@ const fixed =
 // START
 // =========================
 
+async function loadDollarRate() {
+
+  try {
+
+    const response =
+      await fetch(
+        'https://dolarapi.com/v1/dolares/blue'
+      )
+
+    const data =
+      await response.json()
+
+    dollarRate = data.venta
+
+    console.log(
+      'Dólar actualizado:',
+      dollarRate
+    )
+
+  } catch (error) {
+
+    console.error(
+      'Error obteniendo dólar',
+      error
+    )
+  }
+}
+
 async function start() {
+
+  await loadDollarRate()
 
   await loadExpenses()
 
