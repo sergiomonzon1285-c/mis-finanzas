@@ -792,3 +792,103 @@ body {
 
   color: #1e293b;
 }
+/* =========================
+   INVESTMENTS
+========================= */
+
+.investments-section {
+
+  margin-top: 40px;
+
+  background:
+    rgba(79,70,229,.12);
+
+  border:
+    1px solid rgba(99,102,241,.18);
+
+  backdrop-filter: blur(18px);
+
+  border-radius: 30px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 10px 40px rgba(79,70,229,.08);
+}
+
+.investments-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.investments-header h2 {
+
+  font-size: 2rem;
+
+  color: #312e81;
+}
+
+#investments-total {
+
+  font-size: 1.3rem;
+
+  font-weight: 800;
+
+  color: #4338ca;
+}
+/* =========================
+   INVESTMENT COLORS
+========================= */
+
+.category-Acciones {
+  background: #22c55e;
+}
+
+.category-Crypto {
+  background: #f59e0b;
+}
+
+.category-Plazo\ Fijo {
+  background: #3b82f6;
+}
+
+.category-Fondos\ Comunes {
+  background: #8b5cf6;
+}
+
+.category-Dólares {
+  background: #16a34a;
+}
+/* =========================
+   INVESTMENT CATEGORY COLORS
+========================= */
+
+.category-Acciones {
+  background: #22c55e;
+}
+
+.category-Crypto {
+  background: #f59e0b;
+}
+
+.category-PlazoFijo {
+  background: #3b82f6;
+}
+
+.category-FondosComunes {
+  background: #8b5cf6;
+}
+
+.category-Dólares {
+  background: #16a34a;
+}
+
+.category-AhorroInversión {
+  background: #6366f1;
+}

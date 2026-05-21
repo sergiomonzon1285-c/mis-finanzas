@@ -140,6 +140,36 @@ document.querySelector('#app').innerHTML = `
 
 </aside>
 
+<section class="investments-section">
+
+  <div class="investments-header">
+
+    <h2>
+      💼 Ahorros e Inversiones
+    </h2>
+
+    <span id="investments-total">
+      $0
+    </span>
+
+  </div>
+
+  <div id="investments-summary"></div>
+
+  <div
+    class="expense-list"
+    id="investments-list"
+  ></div>
+
+  <button
+    class="add-btn"
+    id="add-investment"
+  >
+    + Agregar inversión
+  </button>
+
+</section>
+
 </main>
 
 </div>
@@ -182,49 +212,7 @@ document.querySelector('#app').innerHTML = `
 
 </select>
 
-<select id="expense-category">
-
- <option value="Otros">
-  📦 Otros
- </option>
-
-  <option value="Hogar">
-    🏠 Hogar
-  </option>
-
-  <option value="Ropa">
-    👕 Ropa
-  </option>
-
-  <option value="Supermercado">
-    🛒 Supermercado
-  </option>
-
-  <option value="Mantenimiento">
-    🔧 Mantenimiento
-  </option>
-
-  <option value="Vehículos">
-    🚗 Vehículos
-  </option>
-
-  <option value="Ocio">
-    🎮 Ocio
-  </option>
-
-  <option value="Ayudas">
-    🤝 Ayudas
-  </option>
-
-  <option value="Familia">
-    👨‍👩‍👧 Familia
-  </option>
-
-  <option value="Regalos">
-    🎁 Regalos
-  </option>
-
-</select>
+<select id="expense-category"></select>
 
     <input
       type="number"
@@ -255,6 +243,78 @@ const expenseName = document.querySelector('#expense-name')
 const expenseAmount = document.querySelector('#expense-amount')
 const expenseAccount = document.querySelector('#expense-account')
 const expenseCategory = document.querySelector('#expense-category')
+const expenseCategories = {
+
+  expenses: `
+
+    <option value="Otros">
+      📦 Otros
+    </option>
+
+    <option value="Ahorro/Inversión">
+  💼 Ahorro/Inversión
+</option>
+
+    <option value="Hogar">
+      🏠 Hogar
+    </option>
+
+    <option value="Ropa">
+      👕 Ropa
+    </option>
+
+    <option value="Supermercado">
+      🛒 Supermercado
+    </option>
+
+    <option value="Mantenimiento">
+      🔧 Mantenimiento
+    </option>
+
+    <option value="Vehículos">
+      🚗 Vehículos
+    </option>
+
+    <option value="Ocio">
+      🎮 Ocio
+    </option>
+
+    <option value="Ayudas">
+      🤝 Ayudas
+    </option>
+
+    <option value="Familia">
+      👨‍👩‍👧 Familia
+    </option>
+
+    <option value="Regalos">
+      🎁 Regalos
+    </option>
+  `,
+
+  investments: `
+
+    <option value="Acciones">
+      📈 Acciones
+    </option>
+
+    <option value="Crypto">
+      🪙 Crypto
+    </option>
+
+    <option value="Plazo Fijo">
+      🏦 Plazo Fijo
+    </option>
+
+    <option value="Fondos Comunes">
+      📊 Fondos Comunes
+    </option>
+
+    <option value="Dólares">
+      💵 Dólares
+    </option>
+  `
+}
 const expenseInstallments = document.querySelector('#expense-installments')
 
 const monthSelect = document.querySelector('#month-select')
@@ -311,6 +371,13 @@ document
     openModal('unique')
   })
 
+  document
+  .querySelector('#add-investment')
+  .addEventListener('click', () => {
+
+    openModal('investment')
+  })
+
 // =========================
 // ABRIR MODAL
 // =========================
@@ -319,9 +386,26 @@ function openModal(type) {
 
   currentType = type
 
+  if (type === 'investment') {
+
+  expenseCategory.innerHTML =
+    expenseCategories.investments
+
+} else {
+
+  expenseCategory.innerHTML =
+    expenseCategories.expenses
+}
+
   modal.classList.remove('hidden')
 
   expenseInstallments.classList.add('hidden')
+
+  if (type === 'investment') {
+
+  modalTitle.innerText =
+    'Agregar inversión'
+}
   
 if (type === 'income') {
   modalTitle.innerText = 'Agregar Ingreso'
@@ -435,6 +519,10 @@ function renderExpenses() {
 
   renderUnique()
 
+  renderInvestments()
+
+  renderInvestmentsSummary()
+
   renderInstallments()
 
   updateGlobalTotal()
@@ -534,6 +622,63 @@ function renderFixed() {
 // UNICOS
 // =========================
 
+function renderInvestments() {
+
+  const list =
+    document.querySelector('#investments-list')
+
+  list.innerHTML = ''
+
+  let total = 0
+
+  getExpenses('investment')
+    .filter(expense =>
+      expense.created_month === selectedMonth
+    )
+    .forEach(expense => {
+
+      total += expense.amount
+
+      list.innerHTML += `
+
+        <div class="expense-item">
+
+          <div>
+
+            <span>${expense.name}</span>
+
+            <small>
+              ${expense.category || 'Otros'}
+            </small>
+
+          </div>
+
+          <div style="
+            display:flex;
+            gap:10px;
+            align-items:center;
+          ">
+
+            <strong>
+              $${expense.amount.toLocaleString()}
+            </strong>
+
+            <button
+              onclick="removeExpense('${expense.id}')"
+            >
+              🗑️
+            </button>
+
+          </div>
+
+        </div>
+      `
+    })
+
+  document.querySelector('#investments-total').innerText =
+    `$${total.toLocaleString()}`
+}
+
 function renderUnique() {
 
   const list = document.querySelector('#unique-list')
@@ -580,6 +725,85 @@ function renderUnique() {
 // =========================
 // CUOTAS
 // =========================
+
+function renderInvestmentsSummary() {
+
+  const container =
+    document.querySelector(
+      '#investments-summary'
+    )
+
+  container.innerHTML = ''
+
+  const investments =
+    getExpenses('investment')
+      .filter(item =>
+        item.created_month === selectedMonth
+      )
+
+  const totals = {}
+
+  let grandTotal = 0
+
+  investments.forEach(item => {
+
+    const category =
+      item.category || 'Otros'
+
+    if (!totals[category]) {
+      totals[category] = 0
+    }
+
+    totals[category] += item.amount
+
+    grandTotal += item.amount
+  })
+
+  Object.entries(totals).forEach(
+    ([category, total]) => {
+
+      const percent =
+        ((total / grandTotal) * 100)
+          .toFixed(0)
+
+      container.innerHTML += `
+
+        <div class="summary-item category-item">
+
+          <div class="category-header">
+
+            <div>
+
+              <span>${category}</span>
+
+              <small>
+                ${percent}%
+              </small>
+
+            </div>
+
+            <strong>
+              $${total.toLocaleString()}
+            </strong>
+
+          </div>
+
+          <div class="category-bar">
+
+            <div
+  class="category-fill category-${category
+    .replace(/\s/g, '')
+    .replace('/', '')}"
+  style="width:${percent}%"
+></div>
+
+          </div>
+
+        </div>
+      `
+    }
+  )
+}
 
 function renderInstallments() {
 
@@ -789,10 +1013,12 @@ container.innerHTML += `
 
     <div class="category-bar">
 
-      <div
-        class="category-fill category-${category}"
-        style="width:${percent}%"
-      ></div>
+     <div
+  class="category-fill category-${category
+    .replace(/\s/g, '')
+    .replace('/', '')}"
+  style="width:${percent}%"
+></div>
 
     </div>
 
