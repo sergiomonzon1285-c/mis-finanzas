@@ -942,13 +942,234 @@ overflow: hidden;
 
 .hidden-section {
 
-  opacity: 0;
+  display: none !important;
+}
+/* =========================
+   TOP NAVIGATION
+========================= */
 
-  transform: translateX(50px);
+.top-navigation {
 
-  pointer-events: none;
+  position: fixed;
 
-  position: absolute;
+  top: 0;
+
+  left: 50%;
+
+  transform: translateX(-50%);
 
   width: 100%;
+
+  max-width: 1400px;
+
+  z-index: 9999;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  padding: 10px 14px;
+
+  background:
+    rgba(239,246,255,.86);
+
+  backdrop-filter: blur(14px);
+
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 4px 20px rgba(15,23,42,.06);
+}
+
+/* =========================
+   APP OFFSET
+========================= */
+
+.app {
+
+  padding-top: 160px;
+}
+
+/* =========================
+   TOPBAR COMPACT
+========================= */
+
+.topbar {
+
+  padding: 0;
+
+  margin: 0;
+}
+
+.topbar h1 {
+
+  font-size: 1.5rem;
+}
+
+/* =========================
+   CONTROLS
+========================= */
+
+.topbar-controls {
+
+  display: flex;
+
+  gap: 10px;
+
+  align-items: center;
+}
+
+/* =========================
+   TABS
+========================= */
+
+.tabs {
+
+  width: 100%;
+
+  display: flex;
+
+  gap: 8px;
+
+  margin: 0;
+}
+
+.tab-btn {
+
+  flex: 1;
+}
+
+/* =========================
+   QUICK NAV
+========================= */
+
+.quick-nav {
+
+  display: flex;
+
+  gap: 6px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.quick-nav::-webkit-scrollbar {
+
+  display: none;
+}
+
+.quick-nav button {
+
+  border: none;
+
+  outline: none;
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  background:
+    rgba(255,255,255,.78);
+
+  backdrop-filter: blur(10px);
+
+  -webkit-backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+
+  border-radius: 14px;
+
+  font-size: .78rem;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  min-width: 90px;
+
+  color: #1f2937;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  box-shadow:
+    0 6px 18px rgba(15,23,42,.06);
+
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.quick-nav button:hover {
+
+  transform: translateY(-2px);
+
+  background:
+    rgba(255,255,255,.95);
+
+  box-shadow:
+    0 10px 24px rgba(15,23,42,.08);
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .app {
+
+    padding-top: 185px;
+  }
+
+  .topbar {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+  .topbar h1 {
+
+    font-size: 1.2rem;
+  }
+
+  .topbar-controls {
+
+    width: 100%;
+  }
+
+  .month-select {
+
+    flex: 1;
+  }
+
+  .tab-btn {
+
+    font-size: .72rem;
+
+    padding: 9px 6px;
+  }
+
+  .quick-nav button {
+
+    min-width: 50px;
+
+    font-size: .58rem;
+
+    padding: 5px;
+  }
 }

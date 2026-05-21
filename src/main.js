@@ -21,51 +21,117 @@ import {
 document.querySelector('#app').innerHTML = `
 <div class="app">
 
-<header class="topbar">
+<div class="top-navigation">
 
-  <h1>💸 Mis Finanzas</h1>
+  <header class="topbar">
 
-  <div style="display:flex; gap:10px; align-items:center;">
+    <h1>💸 Mis Finanzas</h1>
 
-    <button id="refresh-btn">
-      🔄 Refrescar
+    <div class="topbar-controls">
+
+      <button id="refresh-btn">
+        🔄 Refrescar
+      </button>
+
+      <select
+        class="month-select"
+        id="month-select"
+      ></select>
+
+    </div>
+
+  </header>
+
+  <div class="tabs">
+
+    <button
+      class="tab-btn active"
+      id="dashboard-tab"
+    >
+      📊 Dashboard
     </button>
 
-    <select
-      class="month-select"
-      id="month-select"
-    ></select>
+    <button
+      class="tab-btn"
+      id="patrimony-tab"
+    >
+      💼 Patrimonio
+    </button>
 
   </div>
 
-</header>
+  <div class="quick-nav">
 
-<div class="tabs">
+    <button onclick="
+      document
+        .querySelector('#income-section')
+        .scrollIntoView({
+          behavior: 'smooth'
+        })
+    ">
+      💰
+      Ingresos
+    </button>
 
-  <button
-    class="tab-btn active"
-    id="dashboard-tab"
-  >
-    📊 Dashboard
-  </button>
+    <button onclick="
+      document
+        .querySelector('#fixed-section')
+        .scrollIntoView({
+          behavior: 'smooth'
+        })
+    ">
+      📌
+      Fijos
+    </button>
 
-  <button
-    class="tab-btn"
-    id="patrimony-tab"
-  >
-    💼 Patrimonio
-  </button>
+    <button onclick="
+      document
+        .querySelector('#installments-section')
+        .scrollIntoView({
+          behavior: 'smooth'
+        })
+    ">
+      💳
+      Cuotas
+    </button>
+
+    <button onclick="
+      document
+        .querySelector('#unique-section')
+        .scrollIntoView({
+          behavior: 'smooth'
+        })
+    ">
+      🛒
+      Únicos
+    </button>
+
+    <button onclick="
+      document
+        .querySelector('#balance-section')
+        .scrollIntoView({
+          behavior: 'smooth'
+        })
+    ">
+      📊
+      Balance
+    </button>
+
+  </div>
 
 </div>
 
-<main class="dashboard">
+<main>
 
 <div
   id="dashboard-section"
   class="page-section"
 >
 
-  <section class="card income">
+  <section
+  id="income-section"
+  class="card income"
+>
 
     <div class="card-header">
       <h2>Ingresos</h2>
@@ -80,7 +146,10 @@ document.querySelector('#app').innerHTML = `
 
   </section>
 
-  <section class="card fixed">
+  <section
+  id="fixed-section"
+  class="card fixed"
+>
 
     <div class="card-header">
       <h2>Gastos Fijos</h2>
@@ -95,7 +164,10 @@ document.querySelector('#app').innerHTML = `
 
   </section>
 
-  <section class="card installments">
+  <section
+  id="installments-section"
+  class="card installments"
+>
 
     <div class="card-header">
       <h2>Cuotas</h2>
@@ -110,7 +182,10 @@ document.querySelector('#app').innerHTML = `
 
   </section>
 
-  <section class="card unique">
+  <section
+  id="unique-section"
+  class="card unique"
+>
 
     <div class="card-header">
       <h2>Gastos Únicos</h2>
@@ -127,8 +202,12 @@ document.querySelector('#app').innerHTML = `
 
   <!-- BALANCE -->
 
-  <div class="summary-card">
-  <h3>Balance</h3>
+  <div
+  id="balance-section"
+  class="summary-card"
+>
+
+<h3>Balance</h3>
 
     <div class="summary-item">
       <span>Total Gastos</span>
