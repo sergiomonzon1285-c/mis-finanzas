@@ -138,8 +138,6 @@ document.querySelector('#app').innerHTML = `
 
   </div>
 
-</aside>
-
 <section class="investments-section">
 
   <div class="investments-header">
@@ -235,6 +233,8 @@ document.querySelector('#app').innerHTML = `
 // =========================
 
 let currentType = null
+
+let editingId = null
 
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
@@ -400,6 +400,16 @@ expenseName.style.display =
 
   currentType = type
 
+  expenseName.value = ''
+
+expenseAmount.value = ''
+
+expenseInstallments.value = ''
+
+expenseCategory.value = ''
+
+expenseAccount.value = 'Visa'
+
 if (type === 'investment') {
 
   expenseCategory.innerHTML =
@@ -513,9 +523,19 @@ expense = createInstallment(
     // GUARDAR
     // =========================
 
-    await addExpense(currentType, expense)
+if (editingId) {
+
+  await deleteExpense(editingId)
+
+  expense.id = editingId
+}
+
+await addExpense(currentType, expense)
+
+editingId = null
 
     await loadExpenses()
+    renderExpenses()
 
     // =========================
     // LIMPIAR
@@ -584,14 +604,20 @@ function renderIncome() {
           <div style="display:flex; gap:10px; align-items:center;">
 
             <strong>
-              $${expense.amount.toLocaleString()}
-            </strong>
+  $${expense.amount.toLocaleString()}
+</strong>
 
-            <button
-              onclick="removeExpense('${expense.id}')"
-            >
-              🗑️
-            </button>
+<button
+  onclick="editExpense('${expense.id}', 'income')"
+>
+  ✏️
+</button>
+
+<button
+  onclick="removeExpense('${expense.id}')"
+>
+  🗑️
+</button>
 
           </div>
 
@@ -621,15 +647,21 @@ function renderFixed() {
 
         <div style="display:flex; gap:10px; align-items:center;">
 
-          <strong>
-            $${expense.amount.toLocaleString()}
-          </strong>
+   <strong>
+  $${expense.amount.toLocaleString()}
+</strong>
 
-          <button
-            onclick="removeExpense('${expense.id}')"
-          >
-            🗑️
-          </button>
+<button
+  onclick="editExpense('${expense.id}', 'fixed')"
+>
+  ✏️
+</button>
+
+<button
+  onclick="removeExpense('${expense.id}')"
+>
+  🗑️
+</button>
 
         </div>
 
@@ -680,15 +712,21 @@ function renderInvestments() {
             align-items:center;
           ">
 
-            <strong>
-              $${expense.amount.toLocaleString()}
-            </strong>
+       <strong>
+  $${expense.amount.toLocaleString()}
+</strong>
 
-            <button
-              onclick="removeExpense('${expense.id}')"
-            >
-              🗑️
-            </button>
+<button
+  onclick="editExpense('${expense.id}', 'investment')"
+>
+  ✏️
+</button>
+
+<button
+  onclick="removeExpense('${expense.id}')"
+>
+  🗑️
+</button>
 
           </div>
 
@@ -723,15 +761,21 @@ function renderUnique() {
 
           <div style="display:flex; gap:10px; align-items:center;">
 
-            <strong>
-              $${expense.amount.toLocaleString()}
-            </strong>
+      <strong>
+  $${expense.amount.toLocaleString()}
+</strong>
 
-            <button
-              onclick="removeExpense('${expense.id}')"
-            >
-              🗑️
-            </button>
+<button
+  onclick="editExpense('${expense.id}', 'unique')"
+>
+  ✏️
+</button>
+
+<button
+  onclick="removeExpense('${expense.id}')"
+>
+  🗑️
+</button>
 
           </div>
 
@@ -865,6 +909,12 @@ function renderInstallments() {
           <strong>
             $${expense.amount.toLocaleString()}
           </strong>
+
+          <button
+  onclick="editExpense('${expense.id}', 'installments')"
+>
+  ✏️
+</button>
 
           <button
             onclick="removeExpense('${expense.id}')"
@@ -1049,13 +1099,12 @@ container.innerHTML += `
 function updateGlobalTotal() {
 const income =
   getExpenses('income')
-    .filter(item =>
-      item.created_month === selectedMonth
-    )
+  
     .reduce((acc, item) => acc + item.amount, 0)
-  const fixed =
-    getExpenses('fixed')
-      .reduce((acc, item) => acc + item.amount, 0)
+const fixed =
+  getExpenses('fixed')
+    .reduce((acc, item) =>
+      acc + item.amount, 0)
 
   const unique =
     getExpenses('unique')
@@ -1126,4 +1175,31 @@ window.removeExpense = async function(id) {
   await loadExpenses()
 
   renderExpenses()
+}
+window.editExpense = function(id, type) {
+
+  const expense =
+    getExpenses(type)
+      .find(item => item.id === id)
+
+  if (!expense) return
+
+  editingId = id
+
+  openModal(type)
+
+  expenseName.value =
+    expense.name || ''
+
+  expenseAmount.value =
+    expense.amount || ''
+
+  expenseCategory.value =
+    expense.category || ''
+
+  if (expense.account) {
+
+    expenseAccount.value =
+      expense.account
+  }
 }
