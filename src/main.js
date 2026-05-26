@@ -32,11 +32,30 @@ document.querySelector('#app').innerHTML = `
     </div>
 
     <div class="quick-nav">
-      <button data-scroll-target="#income-section">💰 Ingresos</button>
-      <button data-scroll-target="#fixed-section">📌 Fijos</button>
-      <button data-scroll-target="#installments-section">💳 Cuotas</button>
-      <button data-scroll-target="#unique-section">🛒 Únicos</button>
-      <button data-scroll-target="#balance-section">📊 Balance</button>
+      <button data-scroll-target="#income-section">
+        <span class="quick-nav-icon">💰</span>
+        <span>Ingresos</span>
+      </button>
+
+      <button data-scroll-target="#fixed-section">
+        <span class="quick-nav-icon">📌</span>
+        <span>Fijos</span>
+      </button>
+
+      <button data-scroll-target="#installments-section">
+        <span class="quick-nav-icon">💳</span>
+        <span>Cuotas</span>
+      </button>
+
+      <button data-scroll-target="#unique-section">
+        <span class="quick-nav-icon">🛒</span>
+        <span>Único Pago</span>
+      </button>
+
+      <button data-scroll-target="#balance-section">
+        <span class="quick-nav-icon">📊</span>
+        <span>Balance</span>
+      </button>
     </div>
   </div>
 
@@ -74,7 +93,7 @@ document.querySelector('#app').innerHTML = `
 
       <section id="unique-section" class="card unique">
         <div class="card-header">
-          <h2>Gastos Únicos</h2>
+          <h2>Único Pago</h2>
           <span id="unique-total">$0</span>
         </div>
 
@@ -112,8 +131,12 @@ document.querySelector('#app').innerHTML = `
         <div class="investments-header">
           <div>
             <h2>💼 Patrimonio</h2>
-            <small id="dollar-rate">USD $0</small>
+            <small id="dollar-rate">Dólar hoy: USD $0</small>
           </div>
+
+          <button class="add-btn investments-add-btn" id="add-investments">
+            + Agregar inversión
+          </button>
         </div>
 
         <div id="investments-summary"></div>
@@ -124,11 +147,12 @@ document.querySelector('#app').innerHTML = `
 
         <div id="investments-real-summary"></div>
         <div id="investments-converted-summary"></div>
-        <div class="expense-list" id="investments-list"></div>
 
-        <button class="add-btn" id="add-investments">
-          + Agregar inversión
-        </button>
+        <div class="investments-detail-title">
+          <h3>Detalle de inversiones</h3>
+        </div>
+
+        <div class="expense-list" id="investments-list"></div>
       </section>
     </div>
   </main>
@@ -223,9 +247,19 @@ monthSelect.addEventListener('change', () => {
 
 document.querySelectorAll('[data-scroll-target]').forEach(button => {
   button.addEventListener('click', () => {
-    document
-      .querySelector(button.dataset.scrollTarget)
-      .scrollIntoView({ behavior: 'smooth' })
+    const target = document.querySelector(button.dataset.scrollTarget)
+    const navigation = document.querySelector('.top-navigation')
+
+    if (!target || !navigation) return
+
+    const navigationHeight = navigation.offsetHeight
+    const targetTop = target.getBoundingClientRect().top + window.scrollY
+    const scrollTop = targetTop - navigationHeight - 14
+
+    window.scrollTo({
+      top: Math.max(scrollTop, 0),
+      behavior: 'smooth'
+    })
   })
 })
 
@@ -284,7 +318,7 @@ function openModal(type) {
   const titles = {
     income: 'Agregar ingreso',
     fixed: 'Agregar gasto fijo',
-    unique: 'Agregar gasto único',
+    unique: 'Agregar único pago',
     installments: 'Agregar cuota'
   }
 
@@ -603,7 +637,7 @@ function renderConvertedInvestmentsSummary() {
   const container = document.querySelector('#investments-converted-summary')
 
   if (dollarElement) {
-    dollarElement.innerText = `USD $${dollarRate}`
+    dollarElement.innerText = `Dólar hoy: USD $${dollarRate}`
   }
 
   if (!container) return
@@ -801,7 +835,7 @@ function createCategoryDetailItem(expense) {
 function getExpenseTypeLabel(type) {
   const labels = {
     fixed: 'Fijo',
-    unique: 'Único',
+    unique: 'Único pago',
     installments: 'Cuota'
   }
 
@@ -873,12 +907,14 @@ async function loadDollarRate() {
 }
 
 async function start() {
+  const appShell = document.querySelector('.app')
   const dashboardTab = document.querySelector('#dashboard-tab')
   const patrimonyTab = document.querySelector('#patrimony-tab')
   const dashboardSection = document.querySelector('#dashboard-section')
   const patrimonySection = document.querySelector('#patrimony-section')
 
   dashboardTab.addEventListener('click', () => {
+    appShell.classList.remove('patrimony-view')
     patrimonySection.classList.add('hidden-section')
     dashboardSection.classList.remove('hidden-section')
     dashboardTab.classList.add('active')
@@ -887,6 +923,7 @@ async function start() {
   })
 
   patrimonyTab.addEventListener('click', () => {
+    appShell.classList.add('patrimony-view')
     dashboardSection.classList.add('hidden-section')
     patrimonySection.classList.remove('hidden-section')
     patrimonyTab.classList.add('active')
