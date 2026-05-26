@@ -18,9 +18,21 @@ document.querySelector('#app').innerHTML = `
 <div class="app">
   <div class="top-navigation">
     <header class="topbar">
-      <h1>💸 Mis Finanzas</h1>
+      <h1>
+        <span class="brand-mark">MF</span>
+        Mis Finanzas
+      </h1>
 
       <div class="topbar-controls">
+        <button
+          class="theme-toggle"
+          id="theme-toggle"
+          type="button"
+          aria-label="Cambiar modo noche"
+        >
+          🌙
+        </button>
+
         <button id="refresh-btn">🔄 Refrescar</button>
         <select class="month-select" id="month-select"></select>
       </div>
@@ -196,6 +208,7 @@ let editingId = null
 let selectedMonth = getCurrentMonthKey()
 let dollarRate = 1230
 let expandedCategory = null
+let expandedAccount = null
 
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
@@ -206,6 +219,23 @@ const expenseCategory = document.querySelector('#expense-category')
 const expenseCurrency = document.querySelector('#expense-currency')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
+const themeToggle = document.querySelector('#theme-toggle')
+
+const savedTheme = localStorage.getItem('theme')
+
+if (savedTheme === 'dark') {
+  document.body.classList.add('dark-mode')
+  themeToggle.innerText = '☀️'
+}
+
+themeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode')
+
+  const isDarkMode = document.body.classList.contains('dark-mode')
+
+  themeToggle.innerText = isDarkMode ? '☀️' : '🌙'
+  localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
+})
 
 const expenseCategories = {
   expenses: `
@@ -497,13 +527,18 @@ function renderInstallments() {
       <div class="expense-item">
         <div>
           <span>${expense.name}</span>
-          <small>${remaining} cuotas restantes</small>
+          <small>${expense.account || 'Sin cuenta'} · ${remaining} cuotas restantes</small>
         </div>
 
         <div class="expense-actions">
           <strong>$${expense.amount.toLocaleString()}</strong>
-          <button onclick="editExpense('${expense.id}', 'installments')">✏️</button>
-          <button onclick="removeExpense('${expense.id}')">🗑️</button>
+          <button onclick="editExpense('${expense.id}', 'installments')" aria-label="Editar">
+            ${getEditIcon()}
+          </button>
+
+          <button onclick="removeExpense('${expense.id}')" aria-label="Eliminar">
+            ${getDeleteIcon()}
+          </button>
         </div>
       </div>
     `
@@ -531,8 +566,13 @@ function renderInvestments() {
             ${expense.amount.toLocaleString()}
           </strong>
 
-          <button onclick="editExpense('${expense.id}', 'investments')">✏️</button>
-          <button onclick="removeExpense('${expense.id}')">🗑️</button>
+          <button onclick="editExpense('${expense.id}', 'investments')" aria-label="Editar">
+            ${getEditIcon()}
+          </button>
+
+          <button onclick="removeExpense('${expense.id}')" aria-label="Eliminar">
+            ${getDeleteIcon()}
+          </button>
         </div>
       </div>
     `
@@ -542,14 +582,43 @@ function renderInvestments() {
 function createExpenseItem(expense, type) {
   return `
     <div class="expense-item">
-      <span>${expense.name}</span>
+      <div>
+        <span>${expense.name}</span>
+        <small>${expense.account || 'Sin cuenta'}</small>
+      </div>
 
       <div class="expense-actions">
         <strong>$${expense.amount.toLocaleString()}</strong>
-        <button onclick="editExpense('${expense.id}', '${type}')">✏️</button>
-        <button onclick="removeExpense('${expense.id}')">🗑️</button>
+        <button onclick="editExpense('${expense.id}', '${type}')" aria-label="Editar">
+          ${getEditIcon()}
+        </button>
+
+        <button onclick="removeExpense('${expense.id}')" aria-label="Eliminar">
+          ${getDeleteIcon()}
+        </button>
       </div>
     </div>
+  `
+}
+
+function getEditIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 20h4.2L18.9 9.3l-4.2-4.2L4 15.8V20Z"></path>
+      <path d="m13.5 6.3 4.2 4.2"></path>
+    </svg>
+  `
+}
+
+function getDeleteIcon() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 7h12"></path>
+      <path d="M9 7V5h6v2"></path>
+      <path d="M9 10v8"></path>
+      <path d="M15 10v8"></path>
+      <path d="M7 7l1 13h8l1-13"></path>
+    </svg>
   `
 }
 
@@ -678,32 +747,102 @@ function renderAccountsSummary() {
   container.innerHTML = ''
 
   const expenses = [
-    ...getExpenses('fixed'),
+    ...getExpenses('fixed')
+      .map(expense => ({ ...expense, type: 'fixed' })),
     ...getExpenses('unique')
-      .filter(item => item.created_month === selectedMonth),
+      .filter(item => item.created_month === selectedMonth)
+      .map(expense => ({ ...expense, type: 'unique' })),
     ...getActiveInstallments()
+      .map(expense => ({ ...expense, type: 'installments' }))
   ]
 
-  const totals = {}
+  const grouped = {}
 
   expenses.forEach(expense => {
     const account = expense.account || 'Sin cuenta'
 
-    if (!totals[account]) {
-      totals[account] = 0
+    if (!grouped[account]) {
+      grouped[account] = {
+        total: 0,
+        items: []
+      }
     }
 
-    totals[account] += expense.amount
+    grouped[account].total += expense.amount
+    grouped[account].items.push(expense)
   })
 
-  Object.entries(totals).forEach(([account, total]) => {
-    container.innerHTML += `
-      <div class="summary-item">
-        <span>${account}</span>
-        <strong>$${total.toLocaleString()}</strong>
+  Object.entries(grouped)
+    .map(([account, data]) => ({
+      account,
+      total: data.total,
+      items: data.items.sort((a, b) => b.amount - a.amount)
+    }))
+    .sort((a, b) => b.total - a.total)
+    .forEach(({ account, total, items }) => {
+      const isOpen = expandedAccount === account
+      const detailItems = items
+        .map(expense => createAccountDetailItem(expense))
+        .join('')
+
+      container.innerHTML += `
+        <div class="account-item ${isOpen ? 'open' : ''}">
+          <button
+            class="account-summary"
+            type="button"
+            data-account="${account}"
+          >
+            <span>${account}</span>
+            <strong>$${total.toLocaleString()}</strong>
+          </button>
+
+          ${
+            isOpen
+              ? `
+                <div class="account-detail">
+                  <div class="account-detail-title">
+                    Gastos con ${account}
+                  </div>
+
+                  ${detailItems}
+                </div>
+              `
+              : ''
+          }
+        </div>
+      `
+    })
+}
+
+document.querySelector('#accounts-summary').addEventListener('click', event => {
+  const summaryButton = event.target.closest('.account-summary')
+
+  if (!summaryButton) return
+
+  const account = summaryButton.dataset.account
+
+  expandedAccount =
+    expandedAccount === account
+      ? null
+      : account
+
+  renderAccountsSummary()
+})
+
+function createAccountDetailItem(expense) {
+  const label = getExpenseTypeLabel(expense.type)
+  const category = expense.category || 'Otros'
+
+  return `
+    <div class="account-detail-item">
+      <div>
+        <strong>${expense.name || 'Sin nombre'}</strong>
+        <small>${label} · ${category}</small>
       </div>
-    `
-  })
+
+      <span>$${expense.amount.toLocaleString()}</span>
+    </div>
+  `
 }
 
 function renderCategoriesSummary() {
