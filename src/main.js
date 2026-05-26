@@ -215,6 +215,7 @@ const expenseCategories = {
     <option value="Ropa">👕 Ropa</option>
     <option value="Supermercado">🛒 Supermercado</option>
     <option value="Mantenimiento">🔧 Mantenimiento</option>
+    <option value="Impuestos">🧾 Impuestos</option>
     <option value="Vehiculos">🚗 Vehiculos</option>
     <option value="Ocio">🎮 Ocio</option>
     <option value="Ayudas">🤝 Ayudas</option>
@@ -856,6 +857,7 @@ function getCategoryColor(category) {
     Ropa: '#ec4899',
     Supermercado: '#22c55e',
     Mantenimiento: '#f59e0b',
+    Impuestos: '#0ea5e9',
     Vehiculos: '#9c0909',
     Ocio: '#8b5cf6',
     Ayudas: '#06b6d4',
