@@ -13,6 +13,12 @@ body {
   font-family: Inter, system-ui, sans-serif;
   color: #1f2937;
   -webkit-font-smoothing: antialiased;
+  transition: background .25s ease, color .25s ease;
+}
+
+body.dark-mode {
+  background: linear-gradient(135deg, #020617 0%, #111827 52%, #1e293b 100%);
+  color: #e5e7eb;
 }
 
 button,
@@ -67,6 +73,29 @@ button {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37, 99, 235, .95),
+      rgba(14, 165, 233, .86)
+    );
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .18);
 }
 
 .topbar-controls {
@@ -99,6 +128,27 @@ button {
 
 #refresh-btn {
   background: #2563eb;
+}
+
+.theme-toggle {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+  font-size: 1.1rem;
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, .95);
 }
 
 #refresh-btn:hover,
@@ -320,6 +370,24 @@ button {
   transition: transform .2s ease, background .2s ease;
 }
 
+.expense-actions button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.expense-actions button:first-of-type svg {
+  stroke: #2563eb;
+}
+
+.expense-actions button:last-of-type svg {
+  stroke: #94a3b8;
+}
+
 .expense-actions button:hover {
   transform: translateY(-1px);
   background: white;
@@ -409,6 +477,138 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.account-item {
+  background: rgba(255, 255, 255, .34);
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 14px;
+  padding: 9px 10px;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, .04);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease;
+}
+
+.account-item.open {
+  background: rgba(255, 255, 255, .48);
+  border-color: rgba(255, 255, 255, .62);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
+  transform: translateY(-1px);
+}
+
+.account-summary {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.account-summary span {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+}
+
+.account-summary span::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: currentColor;
+  opacity: .18;
+}
+
+.account-summary strong {
+  color: #0f172a;
+  font-size: .9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.account-summary:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .18);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.account-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .58);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, .68),
+      rgba(239, 246, 255, .46)
+    );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .72),
+    0 14px 34px rgba(15, 23, 42, .08);
+  transform-origin: top;
+  animation: category-detail-open .28s ease both;
+}
+
+.account-detail-title {
+  color: #334155;
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  margin-bottom: 2px;
+}
+
+.account-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .58);
+  border: 1px solid rgba(255, 255, 255, .42);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
+  animation: category-detail-item-open .24s ease both;
+}
+
+.account-detail-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: .84rem;
+}
+
+.account-detail-item small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: .74rem;
+}
+
+.account-detail-item span {
+  color: #0f172a;
+  font-size: .84rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .category-item {
@@ -652,6 +852,145 @@ button {
   padding: 12px 16px;
   white-space: nowrap;
   box-shadow: 0 10px 24px rgba(37, 99, 235, .16);
+}
+
+body.dark-mode .top-navigation {
+  background: rgba(15, 23, 42, .82);
+  border-bottom: 1px solid rgba(148, 163, 184, .16);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .22);
+}
+
+body.dark-mode .brand-mark {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(59, 130, 246, .95),
+      rgba(45, 212, 191, .82)
+    );
+  box-shadow: 0 10px 24px rgba(45, 212, 191, .12);
+}
+
+body.dark-mode .topbar h1,
+body.dark-mode .summary-card h3,
+body.dark-mode .category-name,
+body.dark-mode .category-amount,
+body.dark-mode .account-summary strong,
+body.dark-mode .expense-item > span,
+body.dark-mode .expense-item > div:first-child span,
+body.dark-mode .investments-header h2,
+body.dark-mode .patrimony-totals-title h3,
+body.dark-mode .investments-detail-title h3 {
+  color: #f8fafc;
+}
+
+body.dark-mode .month-select,
+body.dark-mode .theme-toggle,
+body.dark-mode .quick-nav button,
+body.dark-mode .expense-actions button,
+body.dark-mode .modal-content input,
+body.dark-mode .modal-content select {
+  background: rgba(30, 41, 59, .72);
+  border-color: rgba(148, 163, 184, .2);
+  color: #f8fafc;
+}
+
+body.dark-mode .expense-actions button:first-of-type svg {
+  stroke: #93c5fd;
+}
+
+body.dark-mode .expense-actions button:last-of-type svg {
+  stroke: #cbd5e1;
+}
+
+body.dark-mode .quick-nav button:hover,
+body.dark-mode .theme-toggle:hover {
+  background: rgba(51, 65, 85, .88);
+}
+
+body.dark-mode .card,
+body.dark-mode .summary-card,
+body.dark-mode .investments-section,
+body.dark-mode .modal-content {
+  background: rgba(15, 23, 42, .58);
+  border-color: rgba(148, 163, 184, .18);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .22);
+}
+
+body.dark-mode .expense-item,
+body.dark-mode .summary-item,
+body.dark-mode .category-item,
+body.dark-mode .account-item {
+  background: rgba(30, 41, 59, .58);
+  border-color: rgba(148, 163, 184, .16);
+  color: #e5e7eb;
+}
+
+body.dark-mode .category-item.open,
+body.dark-mode .account-item.open {
+  background: rgba(30, 41, 59, .72);
+  border-color: rgba(148, 163, 184, .26);
+}
+
+body.dark-mode .category-detail,
+body.dark-mode .account-detail {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(30, 41, 59, .78),
+      rgba(15, 23, 42, .58)
+    );
+  border-color: rgba(148, 163, 184, .2);
+}
+
+body.dark-mode .category-detail-item,
+body.dark-mode .account-detail-item {
+  background: rgba(15, 23, 42, .5);
+  border-color: rgba(148, 163, 184, .16);
+}
+
+body.dark-mode .expense-item small,
+body.dark-mode .category-percent-inline,
+body.dark-mode .category-detail-title,
+body.dark-mode .account-detail-title,
+body.dark-mode .category-detail-item small,
+body.dark-mode .account-detail-item small {
+  color: #94a3b8;
+}
+
+body.dark-mode .expense-item strong,
+body.dark-mode .category-detail-item strong,
+body.dark-mode .category-detail-item span,
+body.dark-mode .account-detail-item strong,
+body.dark-mode .account-detail-item span,
+body.dark-mode .summary-item strong {
+  color: #f8fafc;
+}
+
+body.dark-mode .category-bar {
+  background: rgba(51, 65, 85, .95);
+}
+
+body.dark-mode .modal {
+  background: rgba(2, 6, 23, .62);
+}
+
+body.dark-mode .modal-content input:focus,
+body.dark-mode .modal-content select:focus {
+  background: rgba(15, 23, 42, .9);
+}
+
+body.dark-mode #dollar-rate {
+  color: #93c5fd;
+}
+
+body.dark-mode #balance-section .summary-item:first-of-type,
+body.dark-mode #balance-section .summary-item:first-of-type strong {
+  color: #f87171;
+}
+
+body.dark-mode #balance-section .summary-item:last-of-type,
+body.dark-mode #balance-section .summary-item:last-of-type strong {
+  color: #4ade80;
 }
 
 .patrimony-totals-title {
