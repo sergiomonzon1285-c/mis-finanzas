@@ -68,6 +68,11 @@ document.querySelector('#app').innerHTML = `
         <span class="quick-nav-icon">📊</span>
         <span>Balance</span>
       </button>
+
+      <button data-scroll-target="#card-dates-section">
+        <span class="quick-nav-icon">📅</span>
+        <span>Vtos.</span>
+      </button>
     </div>
   </div>
 
@@ -130,6 +135,51 @@ document.querySelector('#app').innerHTML = `
       <div class="summary-card">
         <h3>Tarjetas</h3>
         <div id="accounts-summary"></div>
+      </div>
+
+      <div id="card-dates-section" class="summary-card card-dates-card">
+        <div class="card-dates-header">
+          <h3>Vencimientos</h3>
+
+          <button
+            class="notification-btn"
+            id="enable-notifications"
+            type="button"
+          >
+            Activar avisos
+          </button>
+        </div>
+
+        <div class="card-dates-form">
+          <select id="card-date-account">
+            <option value="Visa">Visa</option>
+            <option value="Mastercard">Mastercard</option>
+            <option value="Amex">Amex</option>
+            <option value="Efectivo">Efectivo</option>
+          </select>
+
+          <input
+            type="number"
+            id="card-closing-day"
+            min="1"
+            max="31"
+            placeholder="Cierre"
+          >
+
+          <input
+            type="number"
+            id="card-due-day"
+            min="1"
+            max="31"
+            placeholder="Vencimiento"
+          >
+
+          <button id="save-card-date" type="button">
+            Guardar
+          </button>
+        </div>
+
+        <div id="card-dates-list"></div>
       </div>
 
       <div class="summary-card">
@@ -220,6 +270,16 @@ const expenseCurrency = document.querySelector('#expense-currency')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
+const cardDateAccount = document.querySelector('#card-date-account')
+const cardClosingDay = document.querySelector('#card-closing-day')
+const cardDueDay = document.querySelector('#card-due-day')
+const saveCardDateButton = document.querySelector('#save-card-date')
+const cardDatesList = document.querySelector('#card-dates-list')
+const enableNotificationsButton =
+  document.querySelector('#enable-notifications')
+
+const cardDatesStorageKey = 'mis-finanzas-card-dates'
+const cardRemindersStorageKey = 'mis-finanzas-card-reminders'
 
 const savedTheme = localStorage.getItem('theme')
 
@@ -312,6 +372,14 @@ document.querySelector('#add-unique').addEventListener('click', () => {
 
 document.querySelector('#add-investments').addEventListener('click', () => {
   openModal('investments')
+})
+
+saveCardDateButton.addEventListener('click', () => {
+  saveCardDate()
+})
+
+enableNotificationsButton.addEventListener('click', async () => {
+  await requestCardNotificationPermission()
 })
 
 function openModal(type) {
@@ -428,6 +496,193 @@ function closeModal() {
   expenseAmount.value = ''
   expenseInstallments.value = ''
   modal.classList.add('hidden')
+}
+
+function getCardDates() {
+  try {
+    const savedCardDates =
+      localStorage.getItem(cardDatesStorageKey)
+
+    return savedCardDates
+      ? JSON.parse(savedCardDates)
+      : []
+  } catch (error) {
+    console.error('Error leyendo vencimientos', error)
+    return []
+  }
+}
+
+function saveCardDates(cardDates) {
+  localStorage.setItem(
+    cardDatesStorageKey,
+    JSON.stringify(cardDates)
+  )
+}
+
+function saveCardDate() {
+  const account = cardDateAccount.value
+  const closingDay = Number(cardClosingDay.value)
+  const dueDay = Number(cardDueDay.value)
+
+  if (!account || !isValidCardDay(closingDay) || !isValidCardDay(dueDay)) {
+    alert('Ingresá cierre y vencimiento entre 1 y 31')
+    return
+  }
+
+  const cardDates = getCardDates()
+    .filter(cardDate => cardDate.account !== account)
+
+  cardDates.push({
+    account,
+    closingDay,
+    dueDay
+  })
+
+  saveCardDates(cardDates)
+
+  cardClosingDay.value = ''
+  cardDueDay.value = ''
+
+  renderCardDates()
+  checkCardReminders()
+}
+
+function isValidCardDay(day) {
+  return Number.isInteger(day) && day >= 1 && day <= 31
+}
+
+function renderCardDates() {
+  const cardDates = getCardDates()
+    .sort((a, b) => a.account.localeCompare(b.account))
+
+  cardDatesList.innerHTML = ''
+
+  if (cardDates.length === 0) {
+    cardDatesList.innerHTML = `
+      <div class="empty-card-dates">
+        Sin vencimientos cargados
+      </div>
+    `
+
+    return
+  }
+
+  cardDates.forEach(cardDate => {
+    cardDatesList.innerHTML += `
+      <div class="card-date-item">
+        <div>
+          <strong>${cardDate.account}</strong>
+          <small>
+            Cierre día ${cardDate.closingDay} · Vence día ${cardDate.dueDay}
+          </small>
+        </div>
+
+        <button
+          type="button"
+          onclick="deleteCardDate('${cardDate.account}')"
+          aria-label="Eliminar vencimiento"
+        >
+          ${getDeleteIcon()}
+        </button>
+      </div>
+    `
+  })
+}
+
+async function requestCardNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('Este navegador no soporta notificaciones')
+    return
+  }
+
+  const permission = await Notification.requestPermission()
+
+  enableNotificationsButton.innerText =
+    permission === 'granted'
+      ? 'Avisos activos'
+      : 'Activar avisos'
+
+  checkCardReminders()
+}
+
+function checkCardReminders() {
+  if (!('Notification' in window)) return
+  if (Notification.permission !== 'granted') return
+
+  const todayKey = getDateKey(new Date())
+  const sentReminders = getSentCardReminders()
+
+  getCardDates().forEach(cardDate => {
+    [
+      {
+        type: 'closing',
+        label: 'cierra',
+        day: cardDate.closingDay
+      },
+      {
+        type: 'due',
+        label: 'vence',
+        day: cardDate.dueDay
+      }
+    ].forEach(reminder => {
+      const reminderDate = getReminderDate(reminder.day)
+      const reminderKey =
+        `${todayKey}-${cardDate.account}-${reminder.type}`
+
+      if (
+        getDateKey(reminderDate) === todayKey &&
+        !sentReminders.includes(reminderKey)
+      ) {
+        new Notification('Mis Finanzas', {
+          body:
+            `${cardDate.account} ${reminder.label} mañana ` +
+            `(día ${reminder.day})`
+        })
+
+        sentReminders.push(reminderKey)
+      }
+    })
+  })
+
+  localStorage.setItem(
+    cardRemindersStorageKey,
+    JSON.stringify(sentReminders)
+  )
+}
+
+function getSentCardReminders() {
+  try {
+    const sentReminders =
+      localStorage.getItem(cardRemindersStorageKey)
+
+    return sentReminders
+      ? JSON.parse(sentReminders)
+      : []
+  } catch (error) {
+    console.error('Error leyendo avisos enviados', error)
+    return []
+  }
+}
+
+function getReminderDate(day) {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const targetDay = Math.min(day, lastDay)
+  const reminderDate = new Date(year, month, targetDay)
+
+  reminderDate.setDate(reminderDate.getDate() - 1)
+
+  return reminderDate
+}
+
+function getDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
 }
 
 function getActiveInstallments() {
@@ -1075,6 +1330,15 @@ async function start() {
   await loadDollarRate()
   await loadExpenses()
   renderExpenses()
+  renderCardDates()
+  checkCardReminders()
+
+  if (
+    'Notification' in window &&
+    Notification.permission === 'granted'
+  ) {
+    enableNotificationsButton.innerText = 'Avisos activos'
+  }
 }
 
 function animateSection(section) {
@@ -1136,6 +1400,21 @@ window.editExpense = function(id, type) {
   if (type === 'installments') {
     expenseInstallments.value = expense.installments || ''
   }
+}
+
+window.deleteCardDate = function(account) {
+  const confirmDelete = confirm(
+    `¿Eliminar vencimientos de ${account}?`
+  )
+
+  if (!confirmDelete) return
+
+  saveCardDates(
+    getCardDates()
+      .filter(cardDate => cardDate.account !== account)
+  )
+
+  renderCardDates()
 }
 
 start()

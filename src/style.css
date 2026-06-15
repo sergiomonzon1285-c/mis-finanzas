@@ -175,7 +175,7 @@ button {
 
 .quick-nav {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   width: 100%;
   transition:
@@ -477,6 +477,117 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.card-dates-card {
+  gap: 12px;
+}
+
+.card-dates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-btn {
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .64);
+  color: #1e293b;
+  padding: 9px 11px;
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.notification-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .9);
+  border-color: rgba(37, 99, 235, .2);
+}
+
+.card-dates-form {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr .8fr auto;
+  gap: 8px;
+}
+
+.card-dates-form select,
+.card-dates-form input {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .62);
+  color: #0f172a;
+  padding: 10px 11px;
+  font-size: .86rem;
+}
+
+.card-dates-form button {
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  padding: 10px 12px;
+  font-size: .84rem;
+  font-weight: 800;
+}
+
+#card-dates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-date-item,
+.empty-card-dates {
+  background: rgba(255, 255, 255, .42);
+  border: 1px solid rgba(255, 255, 255, .38);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.card-date-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-date-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: .9rem;
+}
+
+.card-date-item small,
+.empty-card-dates {
+  color: #64748b;
+  font-size: .78rem;
+}
+
+.card-date-item button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .05);
+}
+
+.card-date-item button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #94a3b8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .account-item {
@@ -887,6 +998,10 @@ body.dark-mode .month-select,
 body.dark-mode .theme-toggle,
 body.dark-mode .quick-nav button,
 body.dark-mode .expense-actions button,
+body.dark-mode .notification-btn,
+body.dark-mode .card-dates-form select,
+body.dark-mode .card-dates-form input,
+body.dark-mode .card-date-item button,
 body.dark-mode .modal-content input,
 body.dark-mode .modal-content select {
   background: rgba(30, 41, 59, .72);
@@ -918,6 +1033,8 @@ body.dark-mode .modal-content {
 
 body.dark-mode .expense-item,
 body.dark-mode .summary-item,
+body.dark-mode .card-date-item,
+body.dark-mode .empty-card-dates,
 body.dark-mode .category-item,
 body.dark-mode .account-item {
   background: rgba(30, 41, 59, .58);
@@ -958,12 +1075,22 @@ body.dark-mode .account-detail-item small {
 }
 
 body.dark-mode .expense-item strong,
+body.dark-mode .card-date-item strong,
 body.dark-mode .category-detail-item strong,
 body.dark-mode .category-detail-item span,
 body.dark-mode .account-detail-item strong,
 body.dark-mode .account-detail-item span,
 body.dark-mode .summary-item strong {
   color: #f8fafc;
+}
+
+body.dark-mode .card-date-item small,
+body.dark-mode .empty-card-dates {
+  color: #94a3b8;
+}
+
+body.dark-mode .card-date-item button svg {
+  stroke: #cbd5e1;
 }
 
 body.dark-mode .category-bar {
@@ -1106,6 +1233,7 @@ body.dark-mode #balance-section .summary-item:last-of-type strong {
   }
 
   .quick-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -1144,6 +1272,19 @@ body.dark-mode #balance-section .summary-item:last-of-type strong {
   .summary-item {
     font-size: 14px;
     padding: 14px;
+  }
+
+  .card-dates-header {
+    align-items: flex-start;
+  }
+
+  .card-dates-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card-dates-form select,
+  .card-dates-form button {
+    grid-column: 1 / -1;
   }
 
   .investments-header {
