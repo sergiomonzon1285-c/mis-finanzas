@@ -211,6 +211,15 @@ document.querySelector('#app').innerHTML = `
         <div id="investments-converted-summary"></div>
 
         <div class="investments-detail-title">
+          <h3>Evolución del patrimonio</h3>
+        </div>
+
+        <div
+          id="patrimony-chart"
+          class="patrimony-chart"
+        ></div>
+
+        <div class="investments-detail-title">
           <h3>Detalle de inversiones</h3>
         </div>
 
@@ -242,6 +251,19 @@ document.querySelector('#app').innerHTML = `
     </select>
 
     <input
+      type="text"
+      id="investment-bank"
+      placeholder="Banco"
+      class="hidden-section"
+    >
+
+    <input
+      type="date"
+      id="investment-due-date"
+      class="hidden-section"
+    >
+
+    <input
       type="number"
       id="expense-installments"
       placeholder="Cantidad de cuotas"
@@ -267,6 +289,8 @@ const expenseAmount = document.querySelector('#expense-amount')
 const expenseAccount = document.querySelector('#expense-account')
 const expenseCategory = document.querySelector('#expense-category')
 const expenseCurrency = document.querySelector('#expense-currency')
+const investmentBank = document.querySelector('#investment-bank')
+const investmentDueDate = document.querySelector('#investment-due-date')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
@@ -280,6 +304,7 @@ const enableNotificationsButton =
 
 const cardDatesStorageKey = 'mis-finanzas-card-dates'
 const cardRemindersStorageKey = 'mis-finanzas-card-reminders'
+const fixedTermRemindersStorageKey = 'mis-finanzas-fixed-term-reminders'
 
 const savedTheme = localStorage.getItem('theme')
 
@@ -331,8 +356,9 @@ generateMonthOptions().forEach(month => {
 
 monthSelect.value = selectedMonth
 
-monthSelect.addEventListener('change', () => {
+monthSelect.addEventListener('change', async () => {
   selectedMonth = monthSelect.value
+  await ensureInvestmentsForSelectedMonth()
   renderExpenses()
 })
 
@@ -374,6 +400,10 @@ document.querySelector('#add-investments').addEventListener('click', () => {
   openModal('investments')
 })
 
+expenseCategory.addEventListener('change', () => {
+  updateInvestmentFields()
+})
+
 saveCardDateButton.addEventListener('click', () => {
   saveCardDate()
 })
@@ -390,15 +420,21 @@ function openModal(type) {
   expenseAmount.value = ''
   expenseInstallments.value = ''
   expenseCurrency.value = 'ARS'
+  investmentBank.value = ''
+  investmentDueDate.value = ''
 
   expenseAccount.style.display = 'block'
   expenseName.style.display = 'block'
   expenseCurrency.style.display = 'none'
   expenseInstallments.style.display = 'none'
+  investmentBank.style.display = 'none'
+  investmentDueDate.style.display = 'none'
 
   expenseCurrency.classList.remove('hidden')
   expenseCurrency.classList.remove('hidden-section')
   expenseInstallments.classList.remove('hidden-section')
+  investmentBank.classList.remove('hidden-section')
+  investmentDueDate.classList.remove('hidden-section')
 
   modal.classList.remove('hidden')
   modal.classList.remove('hidden-section')
@@ -411,6 +447,7 @@ function openModal(type) {
     expenseCategory.selectedIndex = 0
     expenseAccount.style.display = 'none'
     expenseName.style.display = 'none'
+    updateInvestmentFields()
     return
   }
 
@@ -430,6 +467,15 @@ function openModal(type) {
   }
 }
 
+function updateInvestmentFields() {
+  const isFixedTerm =
+    currentType === 'investments' &&
+    expenseCategory.value === 'Plazo Fijo'
+
+  investmentBank.style.display = isFixedTerm ? 'block' : 'none'
+  investmentDueDate.style.display = isFixedTerm ? 'block' : 'none'
+}
+
 modal.addEventListener('click', event => {
   if (event.target.id === 'modal') {
     closeModal()
@@ -437,8 +483,17 @@ modal.addEventListener('click', event => {
 })
 
 document.querySelector('#save-expense').addEventListener('click', async () => {
+  const isFixedTerm =
+    currentType === 'investments' &&
+    expenseCategory.value === 'Plazo Fijo'
+
+  const fixedTermBank = investmentBank.value.trim()
+  const fixedTermDueDate = investmentDueDate.value
+
   const name =
-    currentType === 'investments'
+    isFixedTerm
+      ? fixedTermBank
+      : currentType === 'investments'
       ? expenseCategory.value
       : expenseName.value.trim()
 
@@ -449,13 +504,22 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
     return
   }
 
+  if (isFixedTerm && (!fixedTermBank || !fixedTermDueDate)) {
+    alert('Completá banco y vencimiento del plazo fijo')
+    return
+  }
+
   let expense = {
     name,
     amount,
-    account: expenseAccount.value,
+    account: isFixedTerm ? fixedTermBank : expenseAccount.value,
     category: expenseCategory.value,
     currency: expenseCurrency.value || 'ARS',
     created_month: selectedMonth
+  }
+
+  if (isFixedTerm) {
+    expense.start_month = fixedTermDueDate
   }
 
   if (currentType === 'installments') {
@@ -495,6 +559,8 @@ function closeModal() {
   expenseName.value = ''
   expenseAmount.value = ''
   expenseInstallments.value = ''
+  investmentBank.value = ''
+  investmentDueDate.value = ''
   modal.classList.add('hidden')
 }
 
@@ -650,6 +716,58 @@ function checkCardReminders() {
   )
 }
 
+function checkFixedTermReminders() {
+  if (!('Notification' in window)) return
+  if (Notification.permission !== 'granted') return
+
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+
+  const tomorrowKey = getDateKey(tomorrow)
+  const todayKey = getDateKey(today)
+  const sentReminders = getSentFixedTermReminders()
+
+  getExpenses('investments')
+    .filter(investment =>
+      investment.category === 'Plazo Fijo' &&
+      investment.start_month === tomorrowKey
+    )
+    .forEach(investment => {
+      const reminderKey =
+        `${todayKey}-${investment.id || investment.name}-${investment.start_month}`
+
+      if (sentReminders.includes(reminderKey)) return
+
+      new Notification('Mis Finanzas', {
+        body:
+          `El plazo fijo de ${investment.account || investment.name} ` +
+          `vence mañana (${formatDateLabel(investment.start_month)})`
+      })
+
+      sentReminders.push(reminderKey)
+    })
+
+  localStorage.setItem(
+    fixedTermRemindersStorageKey,
+    JSON.stringify(sentReminders)
+  )
+}
+
+function getSentFixedTermReminders() {
+  try {
+    const sentReminders =
+      localStorage.getItem(fixedTermRemindersStorageKey)
+
+    return sentReminders
+      ? JSON.parse(sentReminders)
+      : []
+  } catch (error) {
+    console.error('Error leyendo avisos de plazos fijos', error)
+    return []
+  }
+}
+
 function getSentCardReminders() {
   try {
     const sentReminders =
@@ -707,10 +825,12 @@ function renderExpenses() {
   renderInvestmentsSummary()
   renderRealCurrencySummary()
   renderConvertedInvestmentsSummary()
+  renderPatrimonyChart()
   renderInstallments()
   updateGlobalTotal()
   renderAccountsSummary()
   renderCategoriesSummary()
+  checkFixedTermReminders()
 }
 
 function renderIncome() {
@@ -803,16 +923,55 @@ function renderInstallments() {
     `$${total.toLocaleString()}`
 }
 
+function getInvestmentsForMonth(monthKey = selectedMonth) {
+  return getExpenses('investments')
+    .filter(expense => expense.created_month === monthKey)
+}
+
+async function ensureInvestmentsForSelectedMonth() {
+  if (getInvestmentsForMonth(selectedMonth).length > 0) return
+
+  const previousMonth = getLatestInvestmentMonthBefore(selectedMonth)
+
+  if (!previousMonth) return
+
+  const previousInvestments = getInvestmentsForMonth(previousMonth)
+
+  for (const investment of previousInvestments) {
+    const clonedInvestment = {
+      ...investment,
+      created_month: selectedMonth
+    }
+
+    delete clonedInvestment.id
+
+    await addExpense('investments', clonedInvestment)
+  }
+
+  await loadExpenses()
+}
+
+function getLatestInvestmentMonthBefore(monthKey) {
+  return [...new Set(
+    getExpenses('investments')
+      .map(expense => expense.created_month)
+      .filter(Boolean)
+      .filter(month => month < monthKey)
+  )].sort().at(-1)
+}
+
 function renderInvestments() {
   const list = document.querySelector('#investments-list')
   list.innerHTML = ''
 
-  getExpenses('investments').forEach(expense => {
+  getInvestmentsForMonth().forEach(expense => {
+    const details = getInvestmentDetails(expense)
+
     list.innerHTML += `
       <div class="expense-item">
         <div>
           <span>${expense.name}</span>
-          <small>${expense.category || 'Otros'}</small>
+          <small>${details}</small>
         </div>
 
         <div class="expense-actions">
@@ -832,6 +991,29 @@ function renderInvestments() {
       </div>
     `
   })
+}
+
+function getInvestmentDetails(expense) {
+  if (expense.category === 'Plazo Fijo') {
+    const bank = expense.account || expense.name || 'Banco sin indicar'
+    const dueDate = expense.start_month
+      ? ` · Vence ${formatDateLabel(expense.start_month)}`
+      : ''
+
+    return `${expense.category} · ${bank}${dueDate}`
+  }
+
+  return expense.category || 'Otros'
+}
+
+function formatDateLabel(value) {
+  if (!value || !value.includes('-')) return value
+
+  const [year, month, day] = value.split('-')
+
+  if (!day) return value
+
+  return `${day}/${month}/${year}`
 }
 
 function createExpenseItem(expense, type) {
@@ -883,7 +1065,7 @@ function renderInvestmentsSummary() {
 
   const grouped = {}
 
-  getExpenses('investments').forEach(item => {
+  getInvestmentsForMonth().forEach(item => {
     const category = item.category || 'Otros'
 
     if (!grouped[category]) {
@@ -934,7 +1116,7 @@ function renderRealCurrencySummary() {
   let arsTotal = 0
   let usdTotal = 0
 
-  getExpenses('investments').forEach(item => {
+  getInvestmentsForMonth().forEach(item => {
     if (item.currency === 'USD') {
       usdTotal += item.amount
     } else {
@@ -970,7 +1152,7 @@ function renderConvertedInvestmentsSummary() {
   let arsTotal = 0
   let usdTotal = 0
 
-  getExpenses('investments').forEach(item => {
+  getInvestmentsForMonth().forEach(item => {
     const amount = Number(item.amount) || 0
 
     if (item.currency === 'USD') {
@@ -995,6 +1177,167 @@ function renderConvertedInvestmentsSummary() {
       </div>
     </div>
   `
+}
+
+function renderPatrimonyChart() {
+  const container = document.querySelector('#patrimony-chart')
+
+  if (!container) return
+
+  const monthlyTotals = getMonthlyPatrimonyTotals()
+
+  if (monthlyTotals.length === 0) {
+    container.innerHTML = `
+      <div class="empty-card-dates">
+        Sin datos patrimoniales para graficar
+      </div>
+    `
+
+    return
+  }
+
+  const width = 640
+  const height = 220
+  const padding = 34
+  const maxTotal = Math.max(...monthlyTotals.map(item => item.total), 1)
+  const minTotal = Math.min(...monthlyTotals.map(item => item.total), 0)
+  const range = Math.max(maxTotal - minTotal, 1)
+
+  const points = monthlyTotals.map((item, index) => {
+    const x = monthlyTotals.length === 1
+      ? width / 2
+      : padding + (
+        index * (width - padding * 2)
+      ) / (monthlyTotals.length - 1)
+
+    const y = height - padding - (
+      (item.total - minTotal) *
+      (height - padding * 2)
+    ) / range
+
+    return {
+      ...item,
+      x,
+      y
+    }
+  })
+
+  const polyline = points
+    .map(point => `${point.x},${point.y}`)
+    .join(' ')
+
+  container.innerHTML = `
+    <svg
+      class="patrimony-chart-svg"
+      viewBox="0 0 ${width} ${height}"
+      role="img"
+      aria-label="Evolución mensual del patrimonio"
+    >
+      <line
+        class="patrimony-chart-axis"
+        x1="${padding}"
+        y1="${height - padding}"
+        x2="${width - padding}"
+        y2="${height - padding}"
+      ></line>
+
+      <polyline
+        class="patrimony-chart-line"
+        points="${polyline}"
+      ></polyline>
+
+      ${points.map(point => `
+        <g>
+          <circle
+            class="patrimony-chart-point"
+            cx="${point.x}"
+            cy="${point.y}"
+            r="4.8"
+          ></circle>
+
+          <text
+            class="patrimony-chart-label"
+            x="${point.x}"
+            y="${height - 10}"
+            text-anchor="middle"
+          >
+            ${getShortMonthLabel(point.month)}
+          </text>
+
+          <text
+            class="patrimony-chart-value"
+            x="${point.x}"
+            y="${Math.max(point.y - 10, 14)}"
+            text-anchor="middle"
+          >
+            ${formatCompactCurrency(point.total)}
+          </text>
+        </g>
+      `).join('')}
+    </svg>
+  `
+}
+
+function getMonthlyPatrimonyTotals() {
+  const grouped = {}
+
+  getExpenses('investments')
+    .filter(investment => investment.created_month)
+    .forEach(investment => {
+      if (!grouped[investment.created_month]) {
+        grouped[investment.created_month] = 0
+      }
+
+      grouped[investment.created_month] +=
+        getInvestmentAmountInARS(investment)
+    })
+
+  return Object.entries(grouped)
+    .map(([month, total]) => ({
+      month,
+      total
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+}
+
+function getInvestmentAmountInARS(investment) {
+  const amount = Number(investment.amount) || 0
+
+  return investment.currency === 'USD'
+    ? amount * dollarRate
+    : amount
+}
+
+function getShortMonthLabel(monthKey) {
+  const [, month] = monthKey.split('-').map(Number)
+  const labels = [
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dic'
+  ]
+
+  return labels[month - 1] || monthKey
+}
+
+function formatCompactCurrency(value) {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}M`
+  }
+
+  if (value >= 1000) {
+    return `$${Math.round(value / 1000)}K`
+  }
+
+  return `$${Math.round(value)}`
 }
 
 function renderAccountsSummary() {
@@ -1329,6 +1672,7 @@ async function start() {
 
   await loadDollarRate()
   await loadExpenses()
+  await ensureInvestmentsForSelectedMonth()
   renderExpenses()
   renderCardDates()
   checkCardReminders()
@@ -1395,6 +1739,15 @@ window.editExpense = function(id, type) {
 
   if (expense.currency) {
     expenseCurrency.value = expense.currency
+  }
+
+  if (type === 'investments') {
+    updateInvestmentFields()
+
+    if (expense.category === 'Plazo Fijo') {
+      investmentBank.value = expense.account || expense.name || ''
+      investmentDueDate.value = expense.start_month || ''
+    }
   }
 
   if (type === 'installments') {

@@ -958,6 +958,52 @@ button {
   font-weight: 800;
 }
 
+.patrimony-chart {
+  background: rgba(255, 255, 255, .42);
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .055);
+}
+
+.patrimony-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.patrimony-chart-axis {
+  stroke: rgba(100, 116, 139, .3);
+  stroke-width: 1;
+}
+
+.patrimony-chart-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 6px 10px rgba(37, 99, 235, .18));
+}
+
+.patrimony-chart-point {
+  fill: white;
+  stroke: #2563eb;
+  stroke-width: 3;
+}
+
+.patrimony-chart-label {
+  fill: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.patrimony-chart-value {
+  fill: #0f172a;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .investments-add-btn {
   flex: 0 0 auto;
   padding: 12px 16px;
@@ -1025,6 +1071,7 @@ body.dark-mode .theme-toggle:hover {
 body.dark-mode .card,
 body.dark-mode .summary-card,
 body.dark-mode .investments-section,
+body.dark-mode .patrimony-chart,
 body.dark-mode .modal-content {
   background: rgba(15, 23, 42, .58);
   border-color: rgba(148, 163, 184, .18);
@@ -1108,6 +1155,27 @@ body.dark-mode .modal-content select:focus {
 
 body.dark-mode #dollar-rate {
   color: #93c5fd;
+}
+
+body.dark-mode .patrimony-chart-axis {
+  stroke: rgba(148, 163, 184, .26);
+}
+
+body.dark-mode .patrimony-chart-line {
+  stroke: #38bdf8;
+}
+
+body.dark-mode .patrimony-chart-point {
+  fill: #0f172a;
+  stroke: #38bdf8;
+}
+
+body.dark-mode .patrimony-chart-label {
+  fill: #94a3b8;
+}
+
+body.dark-mode .patrimony-chart-value {
+  fill: #e0f2fe;
 }
 
 body.dark-mode #balance-section .summary-item:first-of-type,
