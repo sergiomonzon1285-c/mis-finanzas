@@ -228,7 +228,7 @@ document.querySelector('#app').innerHTML = `
         <div class="investments-header">
           <div>
             <h2>💼 Patrimonio</h2>
-            <small id="dollar-rate">Dólar hoy: USD $0</small>
+            <small id="dollar-rate">Dólar del mes: USD $0</small>
           </div>
 
           <button class="add-btn investments-add-btn" id="add-investments">
@@ -422,6 +422,22 @@ document.querySelector('#app').innerHTML = `
   ></iframe>
 </div>
 
+<div class="tip-overlay hidden" id="tip-overlay">
+  <div class="tip-card">
+    <button
+      id="close-tip"
+      class="tip-close"
+      type="button"
+      aria-label="Cerrar tip"
+    >
+      ×
+    </button>
+
+    <span class="tip-kicker">Tip financiero</span>
+    <p id="tip-message"></p>
+  </div>
+</div>
+
 <div class="modal hidden" id="modal">
   <div class="modal-content">
     <h2 id="modal-title">Agregar</h2>
@@ -501,6 +517,9 @@ const reportModal = document.querySelector('#report-modal')
 const reportFrame = document.querySelector('#report-frame')
 const closeReportButton = document.querySelector('#close-report')
 const printReportButton = document.querySelector('#print-report')
+const tipOverlay = document.querySelector('#tip-overlay')
+const tipMessage = document.querySelector('#tip-message')
+const closeTipButton = document.querySelector('#close-tip')
 const cardDateAccount = document.querySelector('#card-date-account')
 const cardClosingDay = document.querySelector('#card-closing-day')
 const cardDueDay = document.querySelector('#card-due-day')
@@ -614,6 +633,16 @@ tipsButton.addEventListener('click', () => {
   showFinanceTip()
 })
 
+closeTipButton.addEventListener('click', () => {
+  closeFinanceTip()
+})
+
+tipOverlay.addEventListener('click', (event) => {
+  if (event.target === tipOverlay) {
+    closeFinanceTip()
+  }
+})
+
 const expenseCategories = {
   investments: `
     <option value="Acciones">📈 Acciones</option>
@@ -636,6 +665,7 @@ monthSelect.value = selectedMonth
 
 monthSelect.addEventListener('change', async () => {
   selectedMonth = monthSelect.value
+  await ensureDollarRateForSelectedMonth()
   await ensureInvestmentsForSelectedMonth()
   renderExpenses()
 })
@@ -1020,7 +1050,59 @@ function showFinanceTip() {
   const tips = getFinanceTips()
   const tip = tips[Math.floor(Math.random() * tips.length)]
 
-  alert(tip)
+  playTipSound()
+  tipMessage.innerText = tip
+  tipOverlay.classList.remove('hidden')
+  tipsButton.classList.add('tip-spark')
+
+  setTimeout(() => {
+    tipsButton.classList.remove('tip-spark')
+  }, 520)
+}
+
+function closeFinanceTip() {
+  tipOverlay.classList.add('hidden')
+}
+
+function playTipSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+
+    if (!AudioContext) return
+
+    const audioContext = new AudioContext()
+    const gain = audioContext.createGain()
+
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime)
+    gain.gain.exponentialRampToValueAtTime(
+      0.08,
+      audioContext.currentTime + 0.015
+    )
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      audioContext.currentTime + 0.38
+    )
+    gain.connect(audioContext.destination)
+
+    ;[660, 880].forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator()
+
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        audioContext.currentTime + index * 0.055
+      )
+      oscillator.connect(gain)
+      oscillator.start(audioContext.currentTime + index * 0.055)
+      oscillator.stop(audioContext.currentTime + 0.34 + index * 0.04)
+    })
+
+    setTimeout(() => {
+      audioContext.close()
+    }, 520)
+  } catch (error) {
+    console.error('No se pudo reproducir el sonido del tip', error)
+  }
 }
 
 function getFinanceTips() {
@@ -1034,7 +1116,8 @@ function getFinanceTips() {
     'Las tarjetas de crédito son tus mejores aliadas, siempre y cuando las uses con cuidado.',
     'En los gastos con tarjeta, no te excedas más de lo que puedas pagar al vencimiento.',
     'Las cuotas no siempre son tus mejores aliadas: si las acumulás, se comerán tus ahorros o inversiones.',
-    'Las inversiones a largo plazo son una de las mejores decisiones en las que podés pensar.'
+    'Las inversiones a largo plazo son una de las mejores decisiones en las que podés pensar.',
+    '¿Cobraste las vacaciones? No las consumas de golpe: reservalas para el mes siguiente en un plazo fijo o un fondo común, así evitás sentir el impacto cuando vuelva el ciclo normal de gastos.'
   ]
 }
 
@@ -1714,6 +1797,31 @@ function getInvestmentsForMonth(monthKey = selectedMonth) {
     .filter(expense => expense.created_month === monthKey)
 }
 
+function getDollarRateForMonth(monthKey = selectedMonth) {
+  const monthlyRate = getExpenses('dollar_rates')
+    .find(rate => rate.created_month === monthKey)
+
+  return Number(monthlyRate?.amount) || dollarRate
+}
+
+async function ensureDollarRateForSelectedMonth() {
+  const existingRate = getExpenses('dollar_rates')
+    .find(rate => rate.created_month === selectedMonth)
+
+  if (existingRate) return
+
+  await addExpense('dollar_rates', {
+    name: 'Dólar patrimonio',
+    account: 'Patrimonio',
+    amount: dollarRate,
+    category: 'Tipo de cambio mensual',
+    currency: 'ARS',
+    created_month: selectedMonth
+  })
+
+  await loadExpenses()
+}
+
 async function ensureInvestmentsForSelectedMonth() {
   if (getInvestmentsForMonth(selectedMonth).length > 0) return
 
@@ -1935,9 +2043,10 @@ function renderRealCurrencySummary() {
 function renderConvertedInvestmentsSummary() {
   const dollarElement = document.querySelector('#dollar-rate')
   const container = document.querySelector('#investments-converted-summary')
+  const monthlyDollarRate = getDollarRateForMonth(selectedMonth)
 
   if (dollarElement) {
-    dollarElement.innerText = `Dólar hoy: USD $${dollarRate}`
+    dollarElement.innerText = `Dólar del mes: USD $${monthlyDollarRate}`
   }
 
   if (!container) return
@@ -1950,10 +2059,10 @@ function renderConvertedInvestmentsSummary() {
 
     if (item.currency === 'USD') {
       usdTotal += amount
-      arsTotal += amount * dollarRate
+      arsTotal += amount * monthlyDollarRate
     } else {
       arsTotal += amount
-      usdTotal += amount / dollarRate
+      usdTotal += amount / monthlyDollarRate
     }
   })
 
@@ -2304,7 +2413,8 @@ function buildMonthlyReportData() {
     patrimony.at(-1) ||
     {
       total: 0,
-      usdTotal: 0
+      usdTotal: 0,
+      dollarRate: getDollarRateForMonth(selectedMonth)
     }
 
   return {
@@ -2496,7 +2606,7 @@ function getMonthlyReportHTML(report) {
         <td>${item.month}</td>
         <td>${formatMoney(item.total)}</td>
         <td>${formatNumber(item.usdTotal)} USD</td>
-        <td>USD $${dollarRate.toLocaleString()}</td>
+        <td>USD $${item.dollarRate.toLocaleString()}</td>
       </tr>
     `)
     .join('')
@@ -2685,8 +2795,7 @@ function getMonthlyReportHTML(report) {
 
         <h2>Evolución patrimonial</h2>
         <p class="muted">
-          Conversión estimada con tipo de cambio actual:
-          USD $${dollarRate.toLocaleString()}
+          Conversión estimada con el tipo de cambio cerrado para cada mes.
         </p>
 
         <div class="chart-box">
@@ -2726,42 +2835,52 @@ function getMonthlyPatrimonyTotals() {
     .filter(investment => investment.created_month)
     .forEach(investment => {
       if (!grouped[investment.created_month]) {
+        const monthRate = getDollarRateForMonth(investment.created_month)
+
         grouped[investment.created_month] = {
           total: 0,
-          usdTotal: 0
+          usdTotal: 0,
+          dollarRate: monthRate
         }
       }
 
       grouped[investment.created_month].total +=
-        getInvestmentAmountInARS(investment)
+        getInvestmentAmountInARS(
+          investment,
+          grouped[investment.created_month].dollarRate
+        )
 
       grouped[investment.created_month].usdTotal +=
-        getInvestmentAmountInUSD(investment)
+        getInvestmentAmountInUSD(
+          investment,
+          grouped[investment.created_month].dollarRate
+        )
     })
 
   return Object.entries(grouped)
     .map(([month, values]) => ({
       month,
       total: values.total,
-      usdTotal: values.usdTotal
+      usdTotal: values.usdTotal,
+      dollarRate: values.dollarRate
     }))
     .sort((a, b) => a.month.localeCompare(b.month))
 }
 
-function getInvestmentAmountInARS(investment) {
+function getInvestmentAmountInARS(investment, rate = dollarRate) {
   const amount = Number(investment.amount) || 0
 
   return investment.currency === 'USD'
-    ? amount * dollarRate
+    ? amount * rate
     : amount
 }
 
-function getInvestmentAmountInUSD(investment) {
+function getInvestmentAmountInUSD(investment, rate = dollarRate) {
   const amount = Number(investment.amount) || 0
 
   return investment.currency === 'USD'
     ? amount
-    : amount / dollarRate
+    : amount / rate
 }
 
 function getShortMonthLabel(monthKey) {
@@ -3151,6 +3270,7 @@ async function start() {
 
   await loadDollarRate()
   await loadExpenses()
+  await ensureDollarRateForSelectedMonth()
   await ensureInvestmentsForSelectedMonth()
   renderSettings()
   renderExpenses()

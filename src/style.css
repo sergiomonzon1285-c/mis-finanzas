@@ -114,6 +114,29 @@ button {
   background: rgba(255, 255, 255, .95);
 }
 
+.tips-btn.tip-spark {
+  animation: tip-button-spark .52s cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes tip-button-spark {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .06);
+  }
+
+  42% {
+    transform: scale(1.13) rotate(-5deg);
+    box-shadow:
+      0 10px 26px rgba(37, 99, 235, .18),
+      0 0 0 8px rgba(147, 197, 253, .18);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .06);
+  }
+}
+
 .brand-mark {
   width: 34px;
   height: 34px;
@@ -374,6 +397,7 @@ button {
   gap: 12px;
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+  animation: soft-detail-item-open .28s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 .expense-item > span,
@@ -503,7 +527,7 @@ button {
   0%,
   100% {
     opacity: .58;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 
   50% {
@@ -792,6 +816,99 @@ button {
   background: white;
 }
 
+.tip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 120px 18px 18px;
+  background: rgba(15, 23, 42, .18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: tip-overlay-open .24s ease both;
+}
+
+.tip-overlay.hidden {
+  display: none;
+}
+
+.tip-card {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 22px 22px 20px;
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, .84),
+      rgba(239, 246, 255, .66)
+    );
+  border: 1px solid rgba(255, 255, 255, .64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .76),
+    0 24px 70px rgba(15, 23, 42, .18);
+  color: #0f172a;
+  transform-origin: top center;
+  animation: tip-card-open .38s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.tip-kicker {
+  display: inline-flex;
+  margin-bottom: 10px;
+  color: #2563eb;
+  font-size: .78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.tip-card p {
+  margin: 0;
+  padding-right: 20px;
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.42;
+}
+
+.tip-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #475569;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+@keyframes tip-overlay-open {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tip-card-open {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .account-item {
   background: rgba(255, 255, 255, .34);
   border: 1px solid rgba(255, 255, 255, .42);
@@ -877,7 +994,7 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, .72),
     0 14px 34px rgba(15, 23, 42, .08);
   transform-origin: top;
-  animation: category-detail-open .28s ease both;
+  animation: soft-detail-open .36s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 .account-detail-title {
@@ -901,7 +1018,7 @@ button {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
-  animation: category-detail-item-open .24s ease both;
+  animation: soft-detail-item-open .32s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 .account-detail-item strong {
@@ -1059,7 +1176,7 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, .72),
     0 14px 34px rgba(15, 23, 42, .08);
   transform-origin: top;
-  animation: category-detail-open .28s ease both;
+  animation: soft-detail-open .36s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 .category-detail-title {
@@ -1083,7 +1200,7 @@ button {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
-  animation: category-detail-item-open .24s ease both;
+  animation: soft-detail-item-open .32s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 .category-detail-item strong {
@@ -1106,27 +1223,29 @@ button {
   white-space: nowrap;
 }
 
-@keyframes category-detail-open {
+@keyframes soft-detail-open {
   from {
     opacity: 0;
-    transform: translateY(-8px) scaleY(.96);
+    filter: blur(4px);
+    transform: translateY(-6px) scale(.985);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scaleY(1);
+    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes category-detail-item-open {
+@keyframes soft-detail-item-open {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(7px) scale(.99);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -1691,6 +1810,37 @@ body.dark-mode .report-modal-header button {
   background: rgba(30, 41, 59, .72);
   border-color: rgba(148, 163, 184, .22);
   color: #f8fafc;
+}
+
+body.dark-mode .tip-overlay {
+  background: rgba(2, 6, 23, .38);
+}
+
+body.dark-mode .tip-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(30, 41, 59, .88),
+      rgba(15, 23, 42, .72)
+    );
+  border-color: rgba(148, 163, 184, .22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 24px 70px rgba(0, 0, 0, .34);
+}
+
+body.dark-mode .tip-card p {
+  color: #f8fafc;
+}
+
+body.dark-mode .tip-kicker {
+  color: #93c5fd;
+}
+
+body.dark-mode .tip-close {
+  background: rgba(30, 41, 59, .76);
+  border-color: rgba(148, 163, 184, .22);
+  color: #e2e8f0;
 }
 
 body.dark-mode .modal-content input:focus,
