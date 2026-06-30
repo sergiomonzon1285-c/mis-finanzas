@@ -198,19 +198,15 @@ document.querySelector('#app').innerHTML = `
           </select>
 
           <input
-            type="number"
+            type="date"
             id="card-closing-day"
-            min="1"
-            max="31"
-            placeholder="Cierre"
+            aria-label="Fecha de cierre"
           >
 
           <input
-            type="number"
+            type="date"
             id="card-due-day"
-            min="1"
-            max="31"
-            placeholder="Vencimiento"
+            aria-label="Fecha de vencimiento"
           >
 
           <button id="save-card-date" type="button">
@@ -410,6 +406,22 @@ document.querySelector('#app').innerHTML = `
   </main>
 </div>
 
+<div class="report-modal hidden" id="report-modal">
+  <div class="report-modal-header">
+    <strong>Informe mensual</strong>
+
+    <div>
+      <button id="print-report" type="button">PDF</button>
+      <button id="close-report" type="button">Cerrar</button>
+    </div>
+  </div>
+
+  <iframe
+    id="report-frame"
+    title="Informe mensual Mis Finanzas"
+  ></iframe>
+</div>
+
 <div class="modal hidden" id="modal">
   <div class="modal-content">
     <h2 id="modal-title">Agregar</h2>
@@ -485,6 +497,10 @@ const themeToggle = document.querySelector('#theme-toggle')
 const userGreeting = document.querySelector('#user-greeting')
 const tipsButton = document.querySelector('#tips-btn')
 const monthlyReportButton = document.querySelector('#monthly-report-btn')
+const reportModal = document.querySelector('#report-modal')
+const reportFrame = document.querySelector('#report-frame')
+const closeReportButton = document.querySelector('#close-report')
+const printReportButton = document.querySelector('#print-report')
 const cardDateAccount = document.querySelector('#card-date-account')
 const cardClosingDay = document.querySelector('#card-closing-day')
 const cardDueDay = document.querySelector('#card-due-day')
@@ -708,6 +724,14 @@ addCategoryButton.addEventListener('click', async () => {
 
 monthlyReportButton.addEventListener('click', () => {
   generateMonthlyReport()
+})
+
+closeReportButton.addEventListener('click', () => {
+  closeMonthlyReport()
+})
+
+printReportButton.addEventListener('click', () => {
+  printMonthlyReport()
 })
 
 function openModal(type) {
@@ -1248,26 +1272,44 @@ function renderSettings() {
 
 function getCardDates() {
   return getExpenses('card_dates')
-    .map(cardDate => ({
-      id: cardDate.id,
-      account: cardDate.account || cardDate.name,
-      closingDay: Number(cardDate.installments),
-      dueDay: Number(cardDate.amount)
-    }))
+    .map(cardDate => {
+      const closingDay = Number(cardDate.installments)
+      const dueDay = Number(cardDate.amount)
+      const closingDate = isDateKey(cardDate.category)
+        ? cardDate.category
+        : getProjectedCardDate(closingDay)
+      const dueDate = isDateKey(cardDate.start_month)
+        ? cardDate.start_month
+        : getProjectedCardDate(dueDay)
+
+      return {
+        id: cardDate.id,
+        account: cardDate.account || cardDate.name,
+        closingDay,
+        dueDay,
+        closingDate,
+        dueDate
+      }
+    })
     .filter(cardDate =>
       cardDate.account &&
-      isValidCardDay(cardDate.closingDay) &&
-      isValidCardDay(cardDate.dueDay)
+      isDateKey(cardDate.closingDate) &&
+      isDateKey(cardDate.dueDate)
     )
 }
 
 async function saveCardDate() {
   const account = cardDateAccount.value
-  const closingDay = Number(cardClosingDay.value)
-  const dueDay = Number(cardDueDay.value)
+  const closingDate = cardClosingDay.value
+  const dueDate = cardDueDay.value
 
-  if (!account || !isValidCardDay(closingDay) || !isValidCardDay(dueDay)) {
-    alert('Ingresá cierre y vencimiento entre 1 y 31')
+  if (!account || !isDateKey(closingDate) || !isDateKey(dueDate)) {
+    alert('Ingresá fecha de cierre y fecha de vencimiento')
+    return
+  }
+
+  if (dueDate < closingDate) {
+    alert('El vencimiento no puede ser anterior al cierre')
     return
   }
 
@@ -1281,11 +1323,12 @@ async function saveCardDate() {
   await addExpense('card_dates', {
     name: account,
     account,
-    amount: dueDay,
-    installments: closingDay,
-    category: 'Vencimiento tarjeta',
+    amount: Number(dueDate.slice(-2)),
+    installments: Number(closingDate.slice(-2)),
+    category: closingDate,
     currency: 'ARS',
-    created_month: 'settings'
+    created_month: selectedMonth,
+    start_month: dueDate
   })
 
   await loadExpenses()
@@ -1301,9 +1344,29 @@ function isValidCardDay(day) {
   return Number.isInteger(day) && day >= 1 && day <= 31
 }
 
+function isDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || '')
+}
+
+function getProjectedCardDate(day) {
+  if (!isValidCardDay(day)) return ''
+
+  const [year, month] = selectedMonth
+    .split('-')
+    .map(Number)
+  const projectedDate = new Date(year, month, 1)
+  const lastDay =
+    new Date(projectedDate.getFullYear(), projectedDate.getMonth() + 1, 0)
+      .getDate()
+
+  projectedDate.setDate(Math.min(day, lastDay))
+
+  return getDateKey(projectedDate)
+}
+
 function renderCardDates() {
   const cardDates = getCardDates()
-    .sort((a, b) => a.account.localeCompare(b.account))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   cardDatesList.innerHTML = ''
 
@@ -1323,7 +1386,8 @@ function renderCardDates() {
         <div>
           <strong>${getAccountLabel(cardDate.account)}</strong>
           <small>
-            Cierre día ${cardDate.closingDay} · Vence día ${cardDate.dueDay}
+            Cierre ${formatDateLabel(cardDate.closingDate)}
+            · Vence ${formatDateLabel(cardDate.dueDate)}
           </small>
         </div>
 
@@ -1355,49 +1419,52 @@ async function requestCardNotificationPermission() {
   checkCardReminders()
 }
 
-function checkCardReminders() {
+async function checkCardReminders() {
   if (!('Notification' in window)) return
   if (Notification.permission !== 'granted') return
 
   const todayKey = getDateKey(new Date())
   const sentReminders = getSentCardReminders()
+  const expiredCardDateIds = []
 
   getCardDates().forEach(cardDate => {
-    [
-      {
-        type: 'closing',
-        label: 'cierra',
-        day: cardDate.closingDay
-      },
-      {
-        type: 'due',
-        label: 'vence',
-        day: cardDate.dueDay
-      }
-    ].forEach(reminder => {
-      const reminderDate = getReminderDate(reminder.day)
-      const reminderKey =
-        `${todayKey}-${cardDate.account}-${reminder.type}`
+    const dueReminderDate = new Date(`${cardDate.dueDate}T12:00:00`)
+    dueReminderDate.setDate(dueReminderDate.getDate() - 1)
 
-      if (
-        getDateKey(reminderDate) === todayKey &&
-        !sentReminders.includes(reminderKey)
-      ) {
-        new Notification('Mis Finanzas', {
-          body:
-            `${getAccountLabel(cardDate.account)} ${reminder.label} mañana ` +
-            `(día ${reminder.day})`
-        })
+    const reminderKey =
+      `${cardDate.id || cardDate.account}-${cardDate.dueDate}`
 
-        sentReminders.push(reminderKey)
+    if (
+      getDateKey(dueReminderDate) === todayKey &&
+      !sentReminders.includes(reminderKey)
+    ) {
+      new Notification('Mis Finanzas', {
+        body:
+          `${getAccountLabel(cardDate.account)} vence mañana ` +
+          `(${formatDateLabel(cardDate.dueDate)})`
+      })
+
+      sentReminders.push(reminderKey)
+
+      if (cardDate.id) {
+        expiredCardDateIds.push(cardDate.id)
       }
-    })
+    }
   })
 
   localStorage.setItem(
     cardRemindersStorageKey,
     JSON.stringify(sentReminders)
   )
+
+  for (const id of expiredCardDateIds) {
+    await deleteExpense(id)
+  }
+
+  if (expiredCardDateIds.length > 0) {
+    await loadExpenses()
+    renderCardDates()
+  }
 }
 
 function checkFixedTermReminders() {
@@ -2193,15 +2260,22 @@ function getChartPoints(items, key, width, height, padding, maxTotal) {
 
 function generateMonthlyReport() {
   const report = buildMonthlyReportData()
-  const reportWindow = window.open('', '_blank')
+  reportFrame.srcdoc = getMonthlyReportHTML(report)
+  reportModal.classList.remove('hidden')
+  document.body.classList.add('report-open')
+}
 
-  if (!reportWindow) {
-    alert('Permití ventanas emergentes para generar el PDF')
-    return
-  }
+function closeMonthlyReport() {
+  reportModal.classList.add('hidden')
+  document.body.classList.remove('report-open')
+  reportFrame.srcdoc = ''
+}
 
-  reportWindow.document.write(getMonthlyReportHTML(report))
-  reportWindow.document.close()
+function printMonthlyReport() {
+  const reportWindow = reportFrame.contentWindow
+
+  if (!reportWindow) return
+
   reportWindow.focus()
   reportWindow.print()
 }
