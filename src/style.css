@@ -35,12 +35,12 @@ button {
   width: 100%;
   max-width: 1400px;
   margin: auto;
-  padding: 230px 12px 24px;
+  padding: var(--app-top-offset, 230px) 12px 24px;
   transition: padding-top .25s ease;
 }
 
 .app.patrimony-view {
-  padding-top: 158px;
+  padding-top: var(--app-top-offset, 158px);
 }
 
 .top-navigation {
@@ -317,6 +317,7 @@ button {
 
 .expense-list {
   flex: 1;
+  margin-top: 10px;
 }
 
 .expense-item {
@@ -404,8 +405,70 @@ button {
   transition: transform .2s ease, opacity .2s ease;
 }
 
+.card > .add-btn {
+  margin-bottom: 2px;
+}
+
 .add-btn:hover {
   opacity: .92;
+}
+
+.expand-list-btn {
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .28);
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .045);
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.expand-list-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .76);
+  border-color: rgba(37, 99, 235, .18);
+}
+
+.expand-list-icon {
+  display: inline-flex;
+  width: 26px;
+  height: 22px;
+  border-radius: 999px;
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1.05rem;
+  animation: expand-arrow-pulse 1.8s ease-in-out infinite;
+  transition: transform .2s ease;
+}
+
+.expand-list-btn.expanded .expand-list-icon {
+  transform: rotate(180deg);
+  animation: none;
+}
+
+@keyframes expand-arrow-pulse {
+  0%,
+  100% {
+    opacity: .58;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(3px);
+  }
 }
 
 .summary-card {
@@ -938,6 +1001,90 @@ button {
   box-shadow: 0 10px 40px rgba(79, 70, 229, .08);
 }
 
+.settings-section {
+  background: rgba(255, 255, 255, .5);
+  border: 1px solid rgba(255, 255, 255, .35);
+  backdrop-filter: blur(18px);
+  border-radius: 30px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, .08);
+}
+
+.settings-header {
+  margin-bottom: 18px;
+}
+
+.settings-header h2 {
+  color: #1e293b;
+  font-size: 1.8rem;
+}
+
+.settings-header small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-form input {
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .62);
+  color: #0f172a;
+  padding: 11px 12px;
+  font-size: .9rem;
+}
+
+.settings-form button {
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  padding: 11px 12px;
+  font-size: .9rem;
+  font-weight: 800;
+}
+
+.settings-field {
+  display: grid;
+  gap: 5px;
+  color: #475569;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.token-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .46);
+  display: grid;
+  gap: 6px;
+}
+
+.token-box span {
+  color: #64748b;
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.token-box strong {
+  color: #0f172a;
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+
 .investments-header {
   display: flex;
   justify-content: space-between;
@@ -964,6 +1111,79 @@ button {
   border-radius: 18px;
   padding: 12px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .055);
+}
+
+.cashflow-chart {
+  background: rgba(255, 255, 255, .42);
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .055);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend span::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.legend-income {
+  color: #16a34a;
+}
+
+.legend-income::before {
+  background: #16a34a;
+}
+
+.legend-expenses {
+  color: #dc2626;
+}
+
+.legend-expenses::before {
+  background: #dc2626;
+}
+
+.cashflow-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.income-line {
+  stroke: #16a34a;
+}
+
+.expense-line {
+  stroke: #dc2626;
+}
+
+.cashflow-point {
+  fill: white;
+  stroke-width: 3;
+}
+
+.income-point {
+  stroke: #16a34a;
+}
+
+.expense-point {
+  stroke: #dc2626;
 }
 
 .patrimony-chart-svg {
@@ -1029,6 +1249,7 @@ body.dark-mode .brand-mark {
 
 body.dark-mode .topbar h1,
 body.dark-mode .summary-card h3,
+body.dark-mode .settings-header h2,
 body.dark-mode .category-name,
 body.dark-mode .category-amount,
 body.dark-mode .account-summary strong,
@@ -1044,7 +1265,9 @@ body.dark-mode .month-select,
 body.dark-mode .theme-toggle,
 body.dark-mode .quick-nav button,
 body.dark-mode .expense-actions button,
+body.dark-mode .expand-list-btn,
 body.dark-mode .notification-btn,
+body.dark-mode .settings-form input,
 body.dark-mode .card-dates-form select,
 body.dark-mode .card-dates-form input,
 body.dark-mode .card-date-item button,
@@ -1064,14 +1287,22 @@ body.dark-mode .expense-actions button:last-of-type svg {
 }
 
 body.dark-mode .quick-nav button:hover,
+body.dark-mode .expand-list-btn:hover,
 body.dark-mode .theme-toggle:hover {
   background: rgba(51, 65, 85, .88);
+}
+
+body.dark-mode .expand-list-icon {
+  background: rgba(15, 23, 42, .58);
+  color: #e0f2fe;
 }
 
 body.dark-mode .card,
 body.dark-mode .summary-card,
 body.dark-mode .investments-section,
+body.dark-mode .settings-section,
 body.dark-mode .patrimony-chart,
+body.dark-mode .cashflow-chart,
 body.dark-mode .modal-content {
   background: rgba(15, 23, 42, .58);
   border-color: rgba(148, 163, 184, .18);
@@ -1080,6 +1311,7 @@ body.dark-mode .modal-content {
 
 body.dark-mode .expense-item,
 body.dark-mode .summary-item,
+body.dark-mode .token-box,
 body.dark-mode .card-date-item,
 body.dark-mode .empty-card-dates,
 body.dark-mode .category-item,
@@ -1113,6 +1345,9 @@ body.dark-mode .account-detail-item {
 }
 
 body.dark-mode .expense-item small,
+body.dark-mode .settings-header small,
+body.dark-mode .settings-field,
+body.dark-mode .token-box span,
 body.dark-mode .category-percent-inline,
 body.dark-mode .category-detail-title,
 body.dark-mode .account-detail-title,
@@ -1122,6 +1357,7 @@ body.dark-mode .account-detail-item small {
 }
 
 body.dark-mode .expense-item strong,
+body.dark-mode .token-box strong,
 body.dark-mode .card-date-item strong,
 body.dark-mode .category-detail-item strong,
 body.dark-mode .category-detail-item span,
@@ -1176,6 +1412,10 @@ body.dark-mode .patrimony-chart-label {
 
 body.dark-mode .patrimony-chart-value {
   fill: #e0f2fe;
+}
+
+body.dark-mode .cashflow-point {
+  fill: #0f172a;
 }
 
 body.dark-mode #balance-section .summary-item:first-of-type,

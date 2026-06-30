@@ -41,6 +41,7 @@ document.querySelector('#app').innerHTML = `
     <div class="tabs">
       <button class="tab-btn active" id="dashboard-tab">📊 Dashboard</button>
       <button class="tab-btn" id="patrimony-tab">💼 Patrimonio</button>
+      <button class="tab-btn" id="settings-tab">⚙️ Configuración</button>
     </div>
 
     <div class="quick-nav">
@@ -84,8 +85,8 @@ document.querySelector('#app').innerHTML = `
           <span id="income-total">$0</span>
         </div>
 
-        <div class="expense-list" id="income-list"></div>
         <button class="add-btn" id="add-income">+ Agregar</button>
+        <div class="expense-list" id="income-list"></div>
       </section>
 
       <section id="fixed-section" class="card fixed">
@@ -94,8 +95,8 @@ document.querySelector('#app').innerHTML = `
           <span id="fixed-total">$0</span>
         </div>
 
-        <div class="expense-list" id="fixed-list"></div>
         <button class="add-btn" id="add-fixed">+ Agregar</button>
+        <div class="expense-list" id="fixed-list"></div>
       </section>
 
       <section id="installments-section" class="card installments">
@@ -104,8 +105,8 @@ document.querySelector('#app').innerHTML = `
           <span id="installments-total">$0</span>
         </div>
 
-        <div class="expense-list" id="installments-list"></div>
         <button class="add-btn" id="add-installment">+ Agregar</button>
+        <div class="expense-list" id="installments-list"></div>
       </section>
 
       <section id="unique-section" class="card unique">
@@ -114,8 +115,8 @@ document.querySelector('#app').innerHTML = `
           <span id="unique-total">$0</span>
         </div>
 
-        <div class="expense-list" id="unique-list"></div>
         <button class="add-btn" id="add-unique">+ Agregar</button>
+        <div class="expense-list" id="unique-list"></div>
       </section>
 
       <div id="balance-section" class="summary-card">
@@ -130,6 +131,14 @@ document.querySelector('#app').innerHTML = `
           <span>Resto</span>
           <strong id="balance-total">$0</strong>
         </div>
+      </div>
+
+      <div class="summary-card cashflow-chart-card">
+        <h3>Evolución mensual</h3>
+        <div
+          id="cashflow-chart"
+          class="cashflow-chart"
+        ></div>
       </div>
 
       <div class="summary-card">
@@ -226,6 +235,61 @@ document.querySelector('#app').innerHTML = `
         <div class="expense-list" id="investments-list"></div>
       </section>
     </div>
+
+    <div id="settings-section" class="page-section hidden-section">
+      <section class="settings-section">
+        <div class="settings-header">
+          <h2>⚙️ Configuración</h2>
+          <small>Personalización e identidad del dispositivo</small>
+        </div>
+
+        <div class="settings-grid">
+          <div class="summary-card">
+            <h3>Perfil</h3>
+
+            <div class="settings-form">
+              <input
+                type="text"
+                id="profile-first-name"
+                placeholder="Nombre"
+              >
+
+              <input
+                type="text"
+                id="profile-last-name"
+                placeholder="Apellido opcional"
+              >
+
+              <button id="save-profile" type="button">
+                Guardar perfil
+              </button>
+            </div>
+
+            <div class="token-box">
+              <span>Token del dispositivo</span>
+              <strong id="profile-token"></strong>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>Nombres de tarjetas</h3>
+
+            <div
+              id="account-aliases-form"
+              class="settings-form"
+            ></div>
+
+            <button
+              class="add-btn"
+              id="save-account-aliases"
+              type="button"
+            >
+              Guardar nombres
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 </div>
 
@@ -281,6 +345,13 @@ let selectedMonth = getCurrentMonthKey()
 let dollarRate = 1230
 let expandedCategory = null
 let expandedAccount = null
+const expandedExpenseSections = {
+  income: false,
+  fixed: false,
+  installments: false,
+  unique: false,
+  investments: false
+}
 
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
@@ -301,10 +372,24 @@ const saveCardDateButton = document.querySelector('#save-card-date')
 const cardDatesList = document.querySelector('#card-dates-list')
 const enableNotificationsButton =
   document.querySelector('#enable-notifications')
+const profileFirstName = document.querySelector('#profile-first-name')
+const profileLastName = document.querySelector('#profile-last-name')
+const profileToken = document.querySelector('#profile-token')
+const saveProfileButton = document.querySelector('#save-profile')
+const accountAliasesForm = document.querySelector('#account-aliases-form')
+const saveAccountAliasesButton =
+  document.querySelector('#save-account-aliases')
 
-const cardDatesStorageKey = 'mis-finanzas-card-dates'
 const cardRemindersStorageKey = 'mis-finanzas-card-reminders'
 const fixedTermRemindersStorageKey = 'mis-finanzas-fixed-term-reminders'
+const legacyCardDatesStorageKey = 'mis-finanzas-card-dates'
+const profileStorageKey = 'mis-finanzas-profile'
+const defaultAccounts = [
+  'Visa',
+  'Mastercard',
+  'Amex',
+  'Efectivo'
+]
 
 const savedTheme = localStorage.getItem('theme')
 
@@ -380,6 +465,10 @@ document.querySelectorAll('[data-scroll-target]').forEach(button => {
   })
 })
 
+window.addEventListener('resize', () => {
+  syncAppTopOffset()
+})
+
 document.querySelector('#add-income').addEventListener('click', () => {
   openModal('income')
 })
@@ -410,6 +499,14 @@ saveCardDateButton.addEventListener('click', () => {
 
 enableNotificationsButton.addEventListener('click', async () => {
   await requestCardNotificationPermission()
+})
+
+saveProfileButton.addEventListener('click', () => {
+  saveProfile()
+})
+
+saveAccountAliasesButton.addEventListener('click', async () => {
+  await saveAccountAliases()
 })
 
 function openModal(type) {
@@ -564,28 +661,175 @@ function closeModal() {
   modal.classList.add('hidden')
 }
 
-function getCardDates() {
+function getProfile() {
   try {
-    const savedCardDates =
-      localStorage.getItem(cardDatesStorageKey)
+    const savedProfile = localStorage.getItem(profileStorageKey)
 
-    return savedCardDates
-      ? JSON.parse(savedCardDates)
-      : []
+    if (savedProfile) {
+      return JSON.parse(savedProfile)
+    }
   } catch (error) {
-    console.error('Error leyendo vencimientos', error)
-    return []
+    console.error('Error leyendo perfil', error)
+  }
+
+  return {
+    firstName: '',
+    lastName: '',
+    token: createSecureToken()
   }
 }
 
-function saveCardDates(cardDates) {
+function saveProfile() {
+  const profile = {
+    firstName: profileFirstName.value.trim(),
+    lastName: profileLastName.value.trim(),
+    token: profileToken.innerText || createSecureToken()
+  }
+
   localStorage.setItem(
-    cardDatesStorageKey,
-    JSON.stringify(cardDates)
+    profileStorageKey,
+    JSON.stringify(profile)
+  )
+
+  renderProfile()
+}
+
+function renderProfile() {
+  const profile = getProfile()
+
+  profileFirstName.value = profile.firstName || ''
+  profileLastName.value = profile.lastName || ''
+  profileToken.innerText = profile.token
+
+  localStorage.setItem(
+    profileStorageKey,
+    JSON.stringify(profile)
   )
 }
 
-function saveCardDate() {
+function createSecureToken() {
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+
+  return [...bytes]
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function getAccountAliases() {
+  return getExpenses('account_aliases')
+    .reduce((aliases, item) => {
+      if (item.name && item.account) {
+        aliases[item.name] = item.account
+      }
+
+      return aliases
+    }, {})
+}
+
+function getAccountLabel(account) {
+  return getAccountAliases()[account] || account || 'Sin cuenta'
+}
+
+function getKnownAccounts() {
+  const accounts = new Set(defaultAccounts)
+
+  ;[
+    ...getExpenses('fixed'),
+    ...getExpenses('unique'),
+    ...getExpenses('installments'),
+    ...getExpenses('card_dates')
+  ].forEach(item => {
+    if (item.account) {
+      accounts.add(item.account)
+    }
+  })
+
+  return [...accounts]
+}
+
+function renderAccountOptions() {
+  const options = getKnownAccounts()
+    .map(account => `
+      <option value="${account}">
+        ${getAccountLabel(account)}
+      </option>
+    `)
+    .join('')
+
+  expenseAccount.innerHTML = options
+  cardDateAccount.innerHTML = options
+}
+
+function renderAccountAliasesForm() {
+  accountAliasesForm.innerHTML = getKnownAccounts()
+    .map(account => `
+      <label class="settings-field">
+        <span>${account}</span>
+        <input
+          type="text"
+          data-account-alias="${account}"
+          placeholder="${account}"
+          value="${getAccountAliases()[account] || ''}"
+        >
+      </label>
+    `)
+    .join('')
+}
+
+async function saveAccountAliases() {
+  const previousAliases = getExpenses('account_aliases')
+
+  for (const alias of previousAliases) {
+    await deleteExpense(alias.id)
+  }
+
+  const aliasInputs =
+    accountAliasesForm.querySelectorAll('[data-account-alias]')
+
+  for (const input of aliasInputs) {
+    const account = input.dataset.accountAlias
+    const alias = input.value.trim()
+
+    if (!alias || alias === account) continue
+
+    await addExpense('account_aliases', {
+      name: account,
+      account: alias,
+      amount: 0,
+      category: 'Alias tarjeta',
+      currency: 'ARS',
+      created_month: 'settings'
+    })
+  }
+
+  await loadExpenses()
+  renderSettings()
+  renderExpenses()
+}
+
+function renderSettings() {
+  renderProfile()
+  renderAccountOptions()
+  renderAccountAliasesForm()
+}
+
+function getCardDates() {
+  return getExpenses('card_dates')
+    .map(cardDate => ({
+      id: cardDate.id,
+      account: cardDate.account || cardDate.name,
+      closingDay: Number(cardDate.installments),
+      dueDay: Number(cardDate.amount)
+    }))
+    .filter(cardDate =>
+      cardDate.account &&
+      isValidCardDay(cardDate.closingDay) &&
+      isValidCardDay(cardDate.dueDay)
+    )
+}
+
+async function saveCardDate() {
   const account = cardDateAccount.value
   const closingDay = Number(cardClosingDay.value)
   const dueDay = Number(cardDueDay.value)
@@ -595,16 +839,24 @@ function saveCardDate() {
     return
   }
 
-  const cardDates = getCardDates()
-    .filter(cardDate => cardDate.account !== account)
+  const existingCardDate = getCardDates()
+    .find(cardDate => cardDate.account === account)
 
-  cardDates.push({
+  if (existingCardDate) {
+    await deleteExpense(existingCardDate.id)
+  }
+
+  await addExpense('card_dates', {
+    name: account,
     account,
-    closingDay,
-    dueDay
+    amount: dueDay,
+    installments: closingDay,
+    category: 'Vencimiento tarjeta',
+    currency: 'ARS',
+    created_month: 'settings'
   })
 
-  saveCardDates(cardDates)
+  await loadExpenses()
 
   cardClosingDay.value = ''
   cardDueDay.value = ''
@@ -637,7 +889,7 @@ function renderCardDates() {
     cardDatesList.innerHTML += `
       <div class="card-date-item">
         <div>
-          <strong>${cardDate.account}</strong>
+          <strong>${getAccountLabel(cardDate.account)}</strong>
           <small>
             Cierre día ${cardDate.closingDay} · Vence día ${cardDate.dueDay}
           </small>
@@ -701,7 +953,7 @@ function checkCardReminders() {
       ) {
         new Notification('Mis Finanzas', {
           body:
-            `${cardDate.account} ${reminder.label} mañana ` +
+            `${getAccountLabel(cardDate.account)} ${reminder.label} mañana ` +
             `(día ${reminder.day})`
         })
 
@@ -828,23 +1080,31 @@ function renderExpenses() {
   renderPatrimonyChart()
   renderInstallments()
   updateGlobalTotal()
+  renderCashflowChart()
   renderAccountsSummary()
   renderCategoriesSummary()
   checkFixedTermReminders()
 }
 
+function syncAppTopOffset() {
+  const navigation = document.querySelector('.top-navigation')
+
+  if (!navigation) return
+
+  document.documentElement.style.setProperty(
+    '--app-top-offset',
+    `${navigation.offsetHeight + 16}px`
+  )
+}
+
 function renderIncome() {
   const list = document.querySelector('#income-list')
-  list.innerHTML = ''
-
-  let total = 0
-
-  getExpenses('income')
+  const expenses = getExpenses('income')
     .filter(expense => expense.created_month === selectedMonth)
-    .forEach(expense => {
-      total += expense.amount
-      list.innerHTML += createExpenseItem(expense, 'income')
-    })
+  const total = expenses
+    .reduce((acc, expense) => acc + expense.amount, 0)
+
+  renderLimitedExpenseList(list, expenses, 'income')
 
   document.querySelector('#income-total').innerText =
     `$${total.toLocaleString()}`
@@ -852,14 +1112,11 @@ function renderIncome() {
 
 function renderFixed() {
   const list = document.querySelector('#fixed-list')
-  list.innerHTML = ''
+  const expenses = getExpenses('fixed')
+  const total = expenses
+    .reduce((acc, expense) => acc + expense.amount, 0)
 
-  let total = 0
-
-  getExpenses('fixed').forEach(expense => {
-    total += expense.amount
-    list.innerHTML += createExpenseItem(expense, 'fixed')
-  })
+  renderLimitedExpenseList(list, expenses, 'fixed')
 
   document.querySelector('#fixed-total').innerText =
     `$${total.toLocaleString()}`
@@ -867,16 +1124,12 @@ function renderFixed() {
 
 function renderUnique() {
   const list = document.querySelector('#unique-list')
-  list.innerHTML = ''
-
-  let total = 0
-
-  getExpenses('unique')
+  const expenses = getExpenses('unique')
     .filter(expense => expense.created_month === selectedMonth)
-    .forEach(expense => {
-      total += expense.amount
-      list.innerHTML += createExpenseItem(expense, 'unique')
-    })
+  const total = expenses
+    .reduce((acc, expense) => acc + expense.amount, 0)
+
+  renderLimitedExpenseList(list, expenses, 'unique')
 
   document.querySelector('#unique-total').innerText =
     `$${total.toLocaleString()}`
@@ -884,11 +1137,55 @@ function renderUnique() {
 
 function renderInstallments() {
   const list = document.querySelector('#installments-list')
+  const expenses = getActiveInstallments()
+
+  const total = expenses
+    .reduce((acc, expense) => acc + expense.amount, 0)
+
+  renderLimitedExpenseList(
+    list,
+    expenses,
+    'installments',
+    createInstallmentExpenseItem
+  )
+
+  document.querySelector('#installments-total').innerText =
+    `$${total.toLocaleString()}`
+}
+
+function renderLimitedExpenseList(
+  list,
+  expenses,
+  type,
+  renderItem = createExpenseItem
+) {
+  const limit = 5
+  const isExpanded = expandedExpenseSections[type]
+  const visibleExpenses = isExpanded
+    ? expenses
+    : expenses.slice(0, limit)
+
   list.innerHTML = ''
 
-  let total = 0
+  visibleExpenses.forEach(expense => {
+    list.innerHTML += renderItem(expense, type)
+  })
 
-  getActiveInstallments().forEach(expense => {
+  if (expenses.length > limit) {
+    list.innerHTML += `
+      <button
+        class="expand-list-btn ${isExpanded ? 'expanded' : ''}"
+        type="button"
+        onclick="toggleExpenseSection('${type}')"
+        aria-label="${isExpanded ? 'Contraer' : 'Desplegar'} listado"
+      >
+        <span class="expand-list-icon">⌄</span>
+      </button>
+    `
+  }
+}
+
+function createInstallmentExpenseItem(expense) {
     const monthsPassed = getMonthDifference(
       expense.start_month,
       selectedMonth
@@ -896,13 +1193,11 @@ function renderInstallments() {
 
     const remaining = expense.installments - monthsPassed
 
-    total += expense.amount
-
-    list.innerHTML += `
+    return `
       <div class="expense-item">
         <div>
           <span>${expense.name}</span>
-          <small>${expense.account || 'Sin cuenta'} · ${remaining} cuotas restantes</small>
+          <small>${getAccountLabel(expense.account)} · ${remaining} cuotas restantes</small>
         </div>
 
         <div class="expense-actions">
@@ -917,10 +1212,6 @@ function renderInstallments() {
         </div>
       </div>
     `
-  })
-
-  document.querySelector('#installments-total').innerText =
-    `$${total.toLocaleString()}`
 }
 
 function getInvestmentsForMonth(monthKey = selectedMonth) {
@@ -962,12 +1253,20 @@ function getLatestInvestmentMonthBefore(monthKey) {
 
 function renderInvestments() {
   const list = document.querySelector('#investments-list')
-  list.innerHTML = ''
+  const investments = getInvestmentsForMonth()
 
-  getInvestmentsForMonth().forEach(expense => {
-    const details = getInvestmentDetails(expense)
+  renderLimitedExpenseList(
+    list,
+    investments,
+    'investments',
+    createInvestmentExpenseItem
+  )
+}
 
-    list.innerHTML += `
+function createInvestmentExpenseItem(expense) {
+  const details = getInvestmentDetails(expense)
+
+  return `
       <div class="expense-item">
         <div>
           <span>${expense.name}</span>
@@ -990,7 +1289,6 @@ function renderInvestments() {
         </div>
       </div>
     `
-  })
 }
 
 function getInvestmentDetails(expense) {
@@ -1021,7 +1319,7 @@ function createExpenseItem(expense, type) {
     <div class="expense-item">
       <div>
         <span>${expense.name}</span>
-        <small>${expense.account || 'Sin cuenta'}</small>
+        <small>${getAccountLabel(expense.account)}</small>
       </div>
 
       <div class="expense-actions">
@@ -1278,6 +1576,193 @@ function renderPatrimonyChart() {
   `
 }
 
+function renderCashflowChart() {
+  const container = document.querySelector('#cashflow-chart')
+
+  if (!container) return
+
+  const monthlyTotals = getMonthlyCashflowTotals()
+
+  if (monthlyTotals.length === 0) {
+    container.innerHTML = `
+      <div class="empty-card-dates">
+        Sin datos mensuales para graficar
+      </div>
+    `
+
+    return
+  }
+
+  const width = 640
+  const height = 230
+  const padding = 34
+  const maxTotal = Math.max(
+    ...monthlyTotals.map(item => item.income),
+    ...monthlyTotals.map(item => item.expenses),
+    1
+  )
+
+  const incomePoints = getChartPoints(
+    monthlyTotals,
+    'income',
+    width,
+    height,
+    padding,
+    maxTotal
+  )
+
+  const expensePoints = getChartPoints(
+    monthlyTotals,
+    'expenses',
+    width,
+    height,
+    padding,
+    maxTotal
+  )
+
+  container.innerHTML = `
+    <div class="chart-legend">
+      <span class="legend-income">Ingresos</span>
+      <span class="legend-expenses">Gastos</span>
+    </div>
+
+    <svg
+      class="patrimony-chart-svg"
+      viewBox="0 0 ${width} ${height}"
+      role="img"
+      aria-label="Comparativa mensual de ingresos y gastos"
+    >
+      <line
+        class="patrimony-chart-axis"
+        x1="${padding}"
+        y1="${height - padding}"
+        x2="${width - padding}"
+        y2="${height - padding}"
+      ></line>
+
+      <polyline
+        class="cashflow-line income-line"
+        points="${incomePoints.map(point => `${point.x},${point.y}`).join(' ')}"
+      ></polyline>
+
+      <polyline
+        class="cashflow-line expense-line"
+        points="${expensePoints.map(point => `${point.x},${point.y}`).join(' ')}"
+      ></polyline>
+
+      ${monthlyTotals.map((item, index) => {
+        const incomePoint = incomePoints[index]
+        const expensePoint = expensePoints[index]
+
+        return `
+          <g>
+            <circle
+              class="cashflow-point income-point"
+              cx="${incomePoint.x}"
+              cy="${incomePoint.y}"
+              r="4"
+            ></circle>
+
+            <circle
+              class="cashflow-point expense-point"
+              cx="${expensePoint.x}"
+              cy="${expensePoint.y}"
+              r="4"
+            ></circle>
+
+            <text
+              class="patrimony-chart-label"
+              x="${incomePoint.x}"
+              y="${height - 10}"
+              text-anchor="middle"
+            >
+              ${getShortMonthLabel(item.month)}
+            </text>
+          </g>
+        `
+      }).join('')}
+    </svg>
+  `
+}
+
+function getMonthlyCashflowTotals() {
+  const months = getExpenseMonths()
+
+  return months.map(month => {
+    const income = getExpenses('income')
+      .filter(item => item.created_month === month)
+      .reduce((acc, item) => acc + item.amount, 0)
+
+    const fixed = getExpenses('fixed')
+      .reduce((acc, item) => acc + item.amount, 0)
+
+    const unique = getExpenses('unique')
+      .filter(item => item.created_month === month)
+      .reduce((acc, item) => acc + item.amount, 0)
+
+    const installments = getExpenses('installments')
+      .filter(expense => isInstallmentActiveInMonth(expense, month))
+      .reduce((acc, item) => acc + item.amount, 0)
+
+    return {
+      month,
+      income,
+      expenses: fixed + unique + installments
+    }
+  })
+}
+
+function getExpenseMonths() {
+  const months = new Set()
+
+  ;[
+    ...getExpenses('income'),
+    ...getExpenses('unique'),
+    ...getExpenses('installments')
+  ].forEach(expense => {
+    if (expense.created_month) {
+      months.add(expense.created_month)
+    }
+  })
+
+  if (months.size === 0 && getExpenses('fixed').length > 0) {
+    months.add(selectedMonth)
+  }
+
+  return [...months].sort()
+}
+
+function isInstallmentActiveInMonth(expense, month) {
+  const monthsPassed = getMonthDifference(
+    expense.start_month,
+    month
+  )
+
+  const remaining =
+    expense.installments - monthsPassed
+
+  return remaining > 0 && monthsPassed >= 0
+}
+
+function getChartPoints(items, key, width, height, padding, maxTotal) {
+  return items.map((item, index) => {
+    const x = items.length === 1
+      ? width / 2
+      : padding + (
+        index * (width - padding * 2)
+      ) / (items.length - 1)
+
+    const y = height - padding - (
+      item[key] * (height - padding * 2)
+    ) / maxTotal
+
+    return {
+      x,
+      y
+    }
+  })
+}
+
 function getMonthlyPatrimonyTotals() {
   const grouped = {}
 
@@ -1373,11 +1858,12 @@ function renderAccountsSummary() {
   Object.entries(grouped)
     .map(([account, data]) => ({
       account,
+      accountLabel: getAccountLabel(account),
       total: data.total,
       items: data.items.sort((a, b) => b.amount - a.amount)
     }))
     .sort((a, b) => b.total - a.total)
-    .forEach(({ account, total, items }) => {
+    .forEach(({ account, accountLabel, total, items }) => {
       const isOpen = expandedAccount === account
       const detailItems = items
         .map(expense => createAccountDetailItem(expense))
@@ -1390,7 +1876,7 @@ function renderAccountsSummary() {
             type="button"
             data-account="${account}"
           >
-            <span>${account}</span>
+            <span>${accountLabel}</span>
             <strong>$${total.toLocaleString()}</strong>
           </button>
 
@@ -1399,7 +1885,7 @@ function renderAccountsSummary() {
               ? `
                 <div class="account-detail">
                   <div class="account-detail-title">
-                    Gastos con ${account}
+                    Gastos con ${accountLabel}
                   </div>
 
                   ${detailItems}
@@ -1556,7 +2042,7 @@ document.querySelector('#categories-summary').addEventListener('click', event =>
 
 function createCategoryDetailItem(expense) {
   const label = getExpenseTypeLabel(expense.type)
-  const account = expense.account || 'Sin cuenta'
+  const account = getAccountLabel(expense.account)
 
   return `
     <div class="category-detail-item">
@@ -1649,33 +2135,56 @@ async function start() {
   const appShell = document.querySelector('.app')
   const dashboardTab = document.querySelector('#dashboard-tab')
   const patrimonyTab = document.querySelector('#patrimony-tab')
+  const settingsTab = document.querySelector('#settings-tab')
   const dashboardSection = document.querySelector('#dashboard-section')
   const patrimonySection = document.querySelector('#patrimony-section')
+  const settingsSection = document.querySelector('#settings-section')
 
   dashboardTab.addEventListener('click', () => {
     appShell.classList.remove('patrimony-view')
     patrimonySection.classList.add('hidden-section')
+    settingsSection.classList.add('hidden-section')
     dashboardSection.classList.remove('hidden-section')
     dashboardTab.classList.add('active')
     patrimonyTab.classList.remove('active')
+    settingsTab.classList.remove('active')
+    syncAppTopOffset()
     animateSection(dashboardSection)
   })
 
   patrimonyTab.addEventListener('click', () => {
     appShell.classList.add('patrimony-view')
     dashboardSection.classList.add('hidden-section')
+    settingsSection.classList.add('hidden-section')
     patrimonySection.classList.remove('hidden-section')
     patrimonyTab.classList.add('active')
     dashboardTab.classList.remove('active')
+    settingsTab.classList.remove('active')
+    syncAppTopOffset()
     animateSection(patrimonySection)
+  })
+
+  settingsTab.addEventListener('click', () => {
+    appShell.classList.add('patrimony-view')
+    dashboardSection.classList.add('hidden-section')
+    patrimonySection.classList.add('hidden-section')
+    settingsSection.classList.remove('hidden-section')
+    settingsTab.classList.add('active')
+    dashboardTab.classList.remove('active')
+    patrimonyTab.classList.remove('active')
+    renderSettings()
+    syncAppTopOffset()
+    animateSection(settingsSection)
   })
 
   await loadDollarRate()
   await loadExpenses()
   await ensureInvestmentsForSelectedMonth()
+  renderSettings()
   renderExpenses()
   renderCardDates()
   checkCardReminders()
+  syncAppTopOffset()
 
   if (
     'Notification' in window &&
@@ -1720,6 +2229,13 @@ window.removeExpense = async function(id) {
   renderExpenses()
 }
 
+window.toggleExpenseSection = function(type) {
+  expandedExpenseSections[type] =
+    !expandedExpenseSections[type]
+
+  renderExpenses()
+}
+
 window.editExpense = function(id, type) {
   const expense = getExpenses(type)
     .find(item => item.id === id)
@@ -1755,17 +2271,20 @@ window.editExpense = function(id, type) {
   }
 }
 
-window.deleteCardDate = function(account) {
+window.deleteCardDate = async function(account) {
   const confirmDelete = confirm(
     `¿Eliminar vencimientos de ${account}?`
   )
 
   if (!confirmDelete) return
 
-  saveCardDates(
-    getCardDates()
-      .filter(cardDate => cardDate.account !== account)
-  )
+  const cardDate = getCardDates()
+    .find(item => item.account === account)
+
+  if (!cardDate) return
+
+  await deleteExpense(cardDate.id)
+  await loadExpenses()
 
   renderCardDates()
 }
