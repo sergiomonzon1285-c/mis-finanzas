@@ -18,10 +18,24 @@ document.querySelector('#app').innerHTML = `
 <div class="app">
   <div class="top-navigation">
     <header class="topbar">
-      <h1>
-        <span class="brand-mark">MF</span>
-        Mis Finanzas
-      </h1>
+      <div class="topbar-title-group">
+        <h1>
+          <span class="brand-mark">MF</span>
+          Mis Finanzas
+        </h1>
+
+        <div class="user-greeting-row">
+          <span id="user-greeting">Hola</span>
+          <button
+            class="tips-btn"
+            id="tips-btn"
+            type="button"
+            aria-label="Ver tip financiero"
+          >
+            💡
+          </button>
+        </div>
+      </div>
 
       <div class="topbar-controls">
         <button
@@ -134,7 +148,17 @@ document.querySelector('#app').innerHTML = `
       </div>
 
       <div class="summary-card cashflow-chart-card">
-        <h3>Evolución mensual</h3>
+        <div class="report-card-header">
+          <h3>Evolución mensual</h3>
+          <button
+            class="report-btn"
+            id="monthly-report-btn"
+            type="button"
+          >
+            PDF
+          </button>
+        </div>
+
         <div
           id="cashflow-chart"
           class="cashflow-chart"
@@ -158,6 +182,12 @@ document.querySelector('#app').innerHTML = `
             Activar avisos
           </button>
         </div>
+
+        <small class="card-dates-note">
+          Tarjetas: aviso el dia anterior. Plazos fijos: aviso el mismo dia.
+          El email queda guardado en Configuracion para activar envios cuando
+          conectes un servicio de correo.
+        </small>
 
         <div class="card-dates-form">
           <select id="card-date-account">
@@ -260,14 +290,64 @@ document.querySelector('#app').innerHTML = `
                 placeholder="Apellido opcional"
               >
 
+              <input
+                type="email"
+                id="profile-email"
+                placeholder="Email para alertas opcional"
+              >
+
               <button id="save-profile" type="button">
                 Guardar perfil
+              </button>
+
+              <button
+                id="logout-device"
+                class="logout-device-btn"
+                type="button"
+              >
+                Cerrar sesion en este dispositivo
               </button>
             </div>
 
             <div class="token-box">
               <span>Token del dispositivo</span>
               <strong id="profile-token"></strong>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>Sincronizar dispositivo</h3>
+
+            <div class="sync-panel">
+              <div class="sync-qr" id="sync-qr"></div>
+
+              <div class="sync-token-box">
+                <span>Codigo de enlace</span>
+                <strong id="sync-token-display"></strong>
+              </div>
+
+              <div class="settings-form">
+                <input
+                  type="text"
+                  id="sync-token-input"
+                  placeholder="Pegar token de otro dispositivo"
+                >
+
+                <div class="sync-actions">
+                  <button id="copy-sync-token" type="button">
+                    Copiar token
+                  </button>
+
+                  <button id="link-device-token" type="button">
+                    Vincular
+                  </button>
+                </div>
+              </div>
+
+              <small class="settings-note">
+                Usa este token para enlazar otro dispositivo. Guardalo antes
+                de cerrar sesion.
+              </small>
             </div>
           </div>
 
@@ -286,6 +366,43 @@ document.querySelector('#app').innerHTML = `
             >
               Guardar nombres
             </button>
+          </div>
+
+          <div class="summary-card">
+            <h3>Agregar tarjeta</h3>
+
+            <div class="settings-form">
+              <input
+                type="text"
+                id="new-account-name"
+                placeholder="Ej: Visa Macro"
+              >
+
+              <button id="add-account" type="button">
+                Agregar tarjeta
+              </button>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>Categorías</h3>
+
+            <div class="settings-form">
+              <input
+                type="text"
+                id="new-category-name"
+                placeholder="Ej: Mascotas"
+              >
+
+              <button id="add-category" type="button">
+                Agregar categoría
+              </button>
+            </div>
+
+            <div
+              id="custom-categories-list"
+              class="settings-list"
+            ></div>
           </div>
         </div>
       </section>
@@ -365,6 +482,9 @@ const investmentDueDate = document.querySelector('#investment-due-date')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
+const userGreeting = document.querySelector('#user-greeting')
+const tipsButton = document.querySelector('#tips-btn')
+const monthlyReportButton = document.querySelector('#monthly-report-btn')
 const cardDateAccount = document.querySelector('#card-date-account')
 const cardClosingDay = document.querySelector('#card-closing-day')
 const cardDueDay = document.querySelector('#card-due-day')
@@ -374,11 +494,24 @@ const enableNotificationsButton =
   document.querySelector('#enable-notifications')
 const profileFirstName = document.querySelector('#profile-first-name')
 const profileLastName = document.querySelector('#profile-last-name')
+const profileEmail = document.querySelector('#profile-email')
 const profileToken = document.querySelector('#profile-token')
 const saveProfileButton = document.querySelector('#save-profile')
+const logoutDeviceButton = document.querySelector('#logout-device')
+const syncTokenDisplay = document.querySelector('#sync-token-display')
+const syncTokenInput = document.querySelector('#sync-token-input')
+const copySyncTokenButton = document.querySelector('#copy-sync-token')
+const linkDeviceTokenButton = document.querySelector('#link-device-token')
+const syncQr = document.querySelector('#sync-qr')
 const accountAliasesForm = document.querySelector('#account-aliases-form')
 const saveAccountAliasesButton =
   document.querySelector('#save-account-aliases')
+const newAccountName = document.querySelector('#new-account-name')
+const addAccountButton = document.querySelector('#add-account')
+const newCategoryName = document.querySelector('#new-category-name')
+const addCategoryButton = document.querySelector('#add-category')
+const customCategoriesList =
+  document.querySelector('#custom-categories-list')
 
 const cardRemindersStorageKey = 'mis-finanzas-card-reminders'
 const fixedTermRemindersStorageKey = 'mis-finanzas-fixed-term-reminders'
@@ -389,6 +522,60 @@ const defaultAccounts = [
   'Mastercard',
   'Amex',
   'Efectivo'
+]
+const defaultExpenseCategories = [
+  {
+    value: 'Otros',
+    label: '📦 Otros'
+  },
+  {
+    value: 'Ahorro/Inversión',
+    label: '💼 Ahorro/Inversión'
+  },
+  {
+    value: 'Hogar',
+    label: '🏠 Hogar'
+  },
+  {
+    value: 'Ropa',
+    label: '👕 Ropa'
+  },
+  {
+    value: 'Supermercado',
+    label: '🛒 Supermercado'
+  },
+  {
+    value: 'Mantenimiento',
+    label: '🔧 Mantenimiento'
+  },
+  {
+    value: 'Impuestos',
+    label: '🧾 Impuestos'
+  },
+  {
+    value: 'Emprendimiento',
+    label: '🚀 Emprendimiento'
+  },
+  {
+    value: 'Vehiculos',
+    label: '🚗 Vehiculos'
+  },
+  {
+    value: 'Ocio',
+    label: '🎮 Ocio'
+  },
+  {
+    value: 'Ayudas',
+    label: '🤝 Ayudas'
+  },
+  {
+    value: 'Familia',
+    label: '👨‍👩‍👧 Familia'
+  },
+  {
+    value: 'Regalos',
+    label: '🎁 Regalos'
+  }
 ]
 
 const savedTheme = localStorage.getItem('theme')
@@ -407,21 +594,11 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
 })
 
+tipsButton.addEventListener('click', () => {
+  showFinanceTip()
+})
+
 const expenseCategories = {
-  expenses: `
-    <option value="Otros">📦 Otros</option>
-    <option value="Ahorro/Inversión">💼 Ahorro/Inversión</option>
-    <option value="Hogar">🏠 Hogar</option>
-    <option value="Ropa">👕 Ropa</option>
-    <option value="Supermercado">🛒 Supermercado</option>
-    <option value="Mantenimiento">🔧 Mantenimiento</option>
-    <option value="Impuestos">🧾 Impuestos</option>
-    <option value="Vehiculos">🚗 Vehiculos</option>
-    <option value="Ocio">🎮 Ocio</option>
-    <option value="Ayudas">🤝 Ayudas</option>
-    <option value="Familia">👨‍👩‍👧 Familia</option>
-    <option value="Regalos">🎁 Regalos</option>
-  `,
   investments: `
     <option value="Acciones">📈 Acciones</option>
     <option value="Crypto">🪙 Crypto</option>
@@ -456,7 +633,7 @@ document.querySelectorAll('[data-scroll-target]').forEach(button => {
 
     const navigationHeight = navigation.offsetHeight
     const targetTop = target.getBoundingClientRect().top + window.scrollY
-    const scrollTop = targetTop - navigationHeight - 14
+    const scrollTop = targetTop - navigationHeight - 34
 
     window.scrollTo({
       top: Math.max(scrollTop, 0),
@@ -505,8 +682,32 @@ saveProfileButton.addEventListener('click', () => {
   saveProfile()
 })
 
+logoutDeviceButton.addEventListener('click', () => {
+  logoutCurrentDevice()
+})
+
+copySyncTokenButton.addEventListener('click', async () => {
+  await copySyncToken()
+})
+
+linkDeviceTokenButton.addEventListener('click', () => {
+  linkDeviceByToken()
+})
+
 saveAccountAliasesButton.addEventListener('click', async () => {
   await saveAccountAliases()
+})
+
+addAccountButton.addEventListener('click', async () => {
+  await addCustomAccount()
+})
+
+addCategoryButton.addEventListener('click', async () => {
+  await addCustomCategory()
+})
+
+monthlyReportButton.addEventListener('click', () => {
+  generateMonthlyReport()
 })
 
 function openModal(type) {
@@ -556,7 +757,7 @@ function openModal(type) {
   }
 
   modalTitle.innerText = titles[type] || 'Agregar'
-  expenseCategory.innerHTML = expenseCategories.expenses
+  expenseCategory.innerHTML = getExpenseCategoryOptions()
   expenseCategory.selectedIndex = 0
 
   if (type === 'installments') {
@@ -675,6 +876,7 @@ function getProfile() {
   return {
     firstName: '',
     lastName: '',
+    email: '',
     token: createSecureToken()
   }
 }
@@ -683,6 +885,7 @@ function saveProfile() {
   const profile = {
     firstName: profileFirstName.value.trim(),
     lastName: profileLastName.value.trim(),
+    email: profileEmail.value.trim(),
     token: profileToken.innerText || createSecureToken()
   }
 
@@ -699,12 +902,116 @@ function renderProfile() {
 
   profileFirstName.value = profile.firstName || ''
   profileLastName.value = profile.lastName || ''
+  profileEmail.value = profile.email || ''
   profileToken.innerText = profile.token
+  syncTokenDisplay.innerText = profile.token
+  renderSyncQr(profile.token)
+  userGreeting.innerText = profile.firstName
+    ? `Hola, ${profile.firstName}`
+    : 'Hola'
 
   localStorage.setItem(
     profileStorageKey,
     JSON.stringify(profile)
   )
+}
+
+function logoutCurrentDevice() {
+  const profile = getProfile()
+  const tokenLabel = profile.token
+    ? `\n\nToken actual: ${profile.token}`
+    : ''
+
+  const shouldLogout = confirm(
+    'Cerrar sesion solo borra la identidad guardada en este dispositivo. ' +
+    'Anota tu token antes de continuar para no perder el acceso de enlace.' +
+    tokenLabel +
+    '\n\n¿Queres cerrar sesion en este dispositivo?'
+  )
+
+  if (!shouldLogout) return
+
+  localStorage.removeItem(profileStorageKey)
+  renderProfile()
+  alert('Sesion cerrada en este dispositivo. Se genero un token local nuevo.')
+}
+
+async function copySyncToken() {
+  const token = getProfile().token
+
+  if (!token) return
+
+  try {
+    await navigator.clipboard.writeText(token)
+    alert('Token copiado')
+  } catch (error) {
+    console.error('No se pudo copiar el token', error)
+    alert(`Tu token es: ${token}`)
+  }
+}
+
+function linkDeviceByToken() {
+  const token = syncTokenInput.value.trim()
+
+  if (token.length < 24) {
+    alert('Pegá un token válido para vincular este dispositivo')
+    return
+  }
+
+  const currentProfile = getProfile()
+  const profile = {
+    ...currentProfile,
+    token
+  }
+
+  localStorage.setItem(
+    profileStorageKey,
+    JSON.stringify(profile)
+  )
+
+  syncTokenInput.value = ''
+  renderProfile()
+  alert('Dispositivo vinculado con el token indicado')
+}
+
+function renderSyncQr(token) {
+  if (!syncQr) return
+
+  const cleanToken = token || ''
+  const cells = Array.from({ length: 49 }, (_, index) => {
+    const charCode = cleanToken.charCodeAt(index % cleanToken.length) || 0
+    const active = (charCode + index) % 3 !== 0
+
+    return `<span class="${active ? 'active' : ''}"></span>`
+  }).join('')
+
+  syncQr.innerHTML = cells
+  syncQr.setAttribute(
+    'aria-label',
+    `Codigo visual del token ${cleanToken}`
+  )
+}
+
+function showFinanceTip() {
+  const tips = getFinanceTips()
+  const tip = tips[Math.floor(Math.random() * tips.length)]
+
+  alert(tip)
+}
+
+function getFinanceTips() {
+  return [
+    'Separá primero un porcentaje para ahorro antes de gastar el resto.',
+    'Revisá los gastos chicos repetidos: suelen pesar más de lo que parecen.',
+    'Si una categoría crece dos meses seguidos, poné un límite para el próximo mes.',
+    'Evitá financiar consumos cotidianos en cuotas largas.',
+    'Compará ingresos contra gastos antes de sumar nuevas obligaciones fijas.',
+    'Mantené un fondo de emergencia equivalente a varios meses de gastos básicos.',
+    'Las tarjetas de crédito son tus mejores aliadas, siempre y cuando las uses con cuidado.',
+    'En los gastos con tarjeta, no te excedas más de lo que puedas pagar al vencimiento.',
+    'Las cuotas no siempre son tus mejores aliadas: si las acumulás, se comerán tus ahorros o inversiones.',
+    'Las inversiones a largo plazo son una de las mejores decisiones en las que podés pensar.'
+  ]
 }
 
 function createSecureToken() {
@@ -732,7 +1039,10 @@ function getAccountLabel(account) {
 }
 
 function getKnownAccounts() {
-  const accounts = new Set(defaultAccounts)
+  const accounts = new Set([
+    ...defaultAccounts,
+    ...getCustomAccounts()
+  ])
 
   ;[
     ...getExpenses('fixed'),
@@ -746,6 +1056,42 @@ function getKnownAccounts() {
   })
 
   return [...accounts]
+}
+
+function getCustomAccounts() {
+  return getExpenses('custom_accounts')
+    .map(item => item.name)
+    .filter(Boolean)
+}
+
+async function addCustomAccount() {
+  const account = newAccountName.value.trim()
+
+  if (!account) {
+    alert('Ingresá el nombre de la tarjeta')
+    return
+  }
+
+  if (
+    getKnownAccounts()
+      .some(item => item.toLowerCase() === account.toLowerCase())
+  ) {
+    alert('Esa tarjeta ya existe')
+    return
+  }
+
+  await addExpense('custom_accounts', {
+    name: account,
+    account,
+    amount: 0,
+    category: 'Tarjeta personalizada',
+    currency: 'ARS',
+    created_month: 'settings'
+  })
+
+  await loadExpenses()
+  newAccountName.value = ''
+  renderSettings()
 }
 
 function renderAccountOptions() {
@@ -775,6 +1121,91 @@ function renderAccountAliasesForm() {
       </label>
     `)
     .join('')
+}
+
+function getCustomCategories() {
+  return getExpenses('custom_categories')
+    .map(item => item.name)
+    .filter(Boolean)
+}
+
+function getExpenseCategories() {
+  const categories = new Map()
+
+  defaultExpenseCategories.forEach(category => {
+    categories.set(category.value, category.label)
+  })
+
+  getCustomCategories().forEach(category => {
+    categories.set(category, `🏷️ ${category}`)
+  })
+
+  return [...categories.entries()]
+    .map(([value, label]) => ({
+      value,
+      label
+    }))
+}
+
+function getExpenseCategoryOptions() {
+  return getExpenseCategories()
+    .map(category => `
+      <option value="${category.value}">
+        ${category.label}
+      </option>
+    `)
+    .join('')
+}
+
+function renderCustomCategories() {
+  const customCategories = getCustomCategories()
+
+  customCategoriesList.innerHTML = customCategories.length
+    ? customCategories
+      .map(category => `
+        <div class="settings-list-item">
+          <span>${category}</span>
+          <button
+            type="button"
+            onclick="deleteCustomCategory('${category}')"
+            aria-label="Eliminar categoría"
+          >
+            ${getDeleteIcon()}
+          </button>
+        </div>
+      `)
+      .join('')
+    : '<div class="empty-card-dates">Sin categorías personalizadas</div>'
+}
+
+async function addCustomCategory() {
+  const category = newCategoryName.value.trim()
+
+  if (!category) {
+    alert('Ingresá el nombre de la categoría')
+    return
+  }
+
+  if (
+    getExpenseCategories()
+      .some(item => item.value.toLowerCase() === category.toLowerCase())
+  ) {
+    alert('Esa categoría ya existe')
+    return
+  }
+
+  await addExpense('custom_categories', {
+    name: category,
+    account: 'Configuración',
+    amount: 0,
+    category: 'Categoría personalizada',
+    currency: 'ARS',
+    created_month: 'settings'
+  })
+
+  await loadExpenses()
+  newCategoryName.value = ''
+  renderSettings()
 }
 
 async function saveAccountAliases() {
@@ -812,6 +1243,7 @@ function renderSettings() {
   renderProfile()
   renderAccountOptions()
   renderAccountAliasesForm()
+  renderCustomCategories()
 }
 
 function getCardDates() {
@@ -973,17 +1405,13 @@ function checkFixedTermReminders() {
   if (Notification.permission !== 'granted') return
 
   const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
-
-  const tomorrowKey = getDateKey(tomorrow)
   const todayKey = getDateKey(today)
   const sentReminders = getSentFixedTermReminders()
 
   getExpenses('investments')
     .filter(investment =>
       investment.category === 'Plazo Fijo' &&
-      investment.start_month === tomorrowKey
+      investment.start_month === todayKey
     )
     .forEach(investment => {
       const reminderKey =
@@ -994,7 +1422,7 @@ function checkFixedTermReminders() {
       new Notification('Mis Finanzas', {
         body:
           `El plazo fijo de ${investment.account || investment.name} ` +
-          `vence mañana (${formatDateLabel(investment.start_month)})`
+          `vence hoy (${formatDateLabel(investment.start_month)})`
       })
 
       sentReminders.push(reminderKey)
@@ -1093,7 +1521,7 @@ function syncAppTopOffset() {
 
   document.documentElement.style.setProperty(
     '--app-top-offset',
-    `${navigation.offsetHeight + 16}px`
+    `${navigation.offsetHeight + 28}px`
   )
 }
 
@@ -1763,6 +2191,460 @@ function getChartPoints(items, key, width, height, padding, maxTotal) {
   })
 }
 
+function generateMonthlyReport() {
+  const report = buildMonthlyReportData()
+  const reportWindow = window.open('', '_blank')
+
+  if (!reportWindow) {
+    alert('Permití ventanas emergentes para generar el PDF')
+    return
+  }
+
+  reportWindow.document.write(getMonthlyReportHTML(report))
+  reportWindow.document.close()
+  reportWindow.focus()
+  reportWindow.print()
+}
+
+function buildMonthlyReportData() {
+  const cashflow = getMonthlyCashflowTotals()
+    .filter(item => item.month <= selectedMonth)
+
+  const patrimony = getMonthlyPatrimonyTotals()
+    .filter(item => item.month <= selectedMonth)
+
+  const currentCashflow =
+    cashflow.find(item => item.month === selectedMonth) ||
+    cashflow.at(-1) ||
+    {
+      month: selectedMonth,
+      income: 0,
+      expenses: 0
+    }
+
+  const categories = getCategoryBreakdownForMonth(selectedMonth)
+  const topCategory = categories[0]
+  const balance = currentCashflow.income - currentCashflow.expenses
+  const currentPatrimony =
+    patrimony.find(item => item.month === selectedMonth) ||
+    patrimony.at(-1) ||
+    {
+      total: 0,
+      usdTotal: 0
+    }
+
+  return {
+    month: selectedMonth,
+    cashflow,
+    patrimony,
+    currentCashflow,
+    categories,
+    topCategory,
+    balance,
+    currentPatrimony,
+    tips: getReportTips(currentCashflow, categories, balance)
+  }
+}
+
+function getCategoryBreakdownForMonth(month) {
+  const expenses = [
+    ...getExpenses('fixed'),
+    ...getExpenses('unique')
+      .filter(item => item.created_month === month),
+    ...getExpenses('installments')
+      .filter(expense => isInstallmentActiveInMonth(expense, month))
+  ]
+
+  const totals = {}
+
+  expenses.forEach(expense => {
+    const category = expense.category || 'Otros'
+
+    if (!totals[category]) {
+      totals[category] = 0
+    }
+
+    totals[category] += expense.amount
+  })
+
+  return Object.entries(totals)
+    .map(([category, total]) => ({
+      category,
+      total
+    }))
+    .sort((a, b) => b.total - a.total)
+}
+
+function getReportTips(cashflow, categories, balance) {
+  const tips = []
+  const topCategory = categories[0]
+  const ocioCategory =
+    categories.find(item => item.category === 'Ocio')
+  const installmentsCategory =
+    categories.find(item => item.category === 'Cuotas')
+  const entrepreneurshipCategory =
+    categories.find(item => item.category === 'Emprendimiento')
+
+  if (balance < 0) {
+    tips.push(
+      'Este periodo cerró con saldo negativo. Conviene revisar gastos variables antes de asumir nuevos compromisos.'
+    )
+  }
+
+  if (topCategory) {
+    const share =
+      cashflow.expenses > 0
+        ? Math.round((topCategory.total / cashflow.expenses) * 100)
+        : 0
+
+    tips.push(
+      `El principal drenaje de dinero está en ${topCategory.category}: representa aproximadamente el ${share}% del gasto del periodo.`
+    )
+
+    if (share >= 35) {
+      tips.push(
+        `Hay mucha concentración de gasto en ${topCategory.category}. Definí un tope mensual para que no absorba el resto del presupuesto.`
+      )
+    }
+  }
+
+  if (cashflow.income > 0 && cashflow.expenses / cashflow.income > 0.8) {
+    tips.push(
+      'Tus gastos superan el 80% de tus ingresos. El próximo mes conviene separar ahorro al inicio y ajustar consumos variables.'
+    )
+  }
+
+  if (ocioCategory && cashflow.expenses > 0) {
+    const ocioShare =
+      Math.round((ocioCategory.total / cashflow.expenses) * 100)
+
+    if (ocioShare >= 15) {
+      tips.push(
+        `Ocio pesa un ${ocioShare}% del gasto mensual. Reducir algunos consumos puntuales puede liberar dinero sin tocar gastos esenciales.`
+      )
+    }
+  }
+
+  if (installmentsCategory) {
+    tips.push(
+      'Las cuotas acumuladas están ocupando parte del flujo mensual. Revisalas antes de sumar nuevas compras financiadas.'
+    )
+  }
+
+  if (entrepreneurshipCategory) {
+    tips.push(
+      'Los gastos de Emprendimiento deberían medirse contra ingresos o retorno esperado para distinguir inversión productiva de fuga de caja.'
+    )
+  }
+
+  if (balance > 0) {
+    tips.push(
+      'El periodo dejó margen positivo. Una mejora posible es asignar una parte fija a fondo de emergencia o inversiones.'
+    )
+  }
+
+  if (tips.length === 0) {
+    tips.push(
+      'El mes se ve equilibrado. Mantené el seguimiento para detectar cambios temprano.'
+    )
+  }
+
+  return tips
+}
+
+function getMonthlyReportHTML(report) {
+  const maxCashflow = Math.max(
+    ...report.cashflow.map(item => item.income),
+    ...report.cashflow.map(item => item.expenses),
+    1
+  )
+
+  const maxPatrimony = Math.max(
+    ...report.patrimony.map(item => item.total),
+    1
+  )
+
+  const cashflowBars = report.cashflow
+    .map(item => `
+      <div class="bar-row">
+        <span>${item.month}</span>
+        <div class="bar-track">
+          <i
+            class="bar income-bar"
+            style="width:${Math.max((item.income / maxCashflow) * 100, 2)}%;"
+          ></i>
+          <i
+            class="bar expense-bar"
+            style="width:${Math.max((item.expenses / maxCashflow) * 100, 2)}%;"
+          ></i>
+        </div>
+      </div>
+    `)
+    .join('')
+
+  const patrimonyBars = report.patrimony
+    .map(item => `
+      <div class="bar-row">
+        <span>${item.month}</span>
+        <div class="bar-track single">
+          <i
+            class="bar patrimony-bar"
+            style="width:${Math.max((item.total / maxPatrimony) * 100, 2)}%;"
+          ></i>
+        </div>
+      </div>
+    `)
+    .join('')
+
+  const cashflowRows = report.cashflow
+    .map(item => `
+      <tr>
+        <td>${item.month}</td>
+        <td>${formatMoney(item.income)}</td>
+        <td>${formatMoney(item.expenses)}</td>
+        <td>${formatMoney(item.income - item.expenses)}</td>
+      </tr>
+    `)
+    .join('')
+
+  const categoryRows = report.categories
+    .map(item => `
+      <tr>
+        <td>${item.category}</td>
+        <td>${formatMoney(item.total)}</td>
+      </tr>
+    `)
+    .join('')
+
+  const patrimonyRows = report.patrimony
+    .map(item => `
+      <tr>
+        <td>${item.month}</td>
+        <td>${formatMoney(item.total)}</td>
+        <td>${formatNumber(item.usdTotal)} USD</td>
+        <td>USD $${dollarRate.toLocaleString()}</td>
+      </tr>
+    `)
+    .join('')
+
+  return `
+    <!doctype html>
+    <html>
+      <head>
+        <title>Informe Mis Finanzas ${report.month}</title>
+        <style>
+          body {
+            font-family: Inter, Arial, sans-serif;
+            color: #111827;
+            padding: 28px;
+          }
+
+          h1 {
+            margin: 0 0 4px;
+          }
+
+          h2 {
+            margin-top: 26px;
+            font-size: 18px;
+          }
+
+          .muted {
+            color: #64748b;
+          }
+
+          .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 22px 0;
+          }
+
+          .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+            background: #f8fafc;
+          }
+
+          .card span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 6px;
+          }
+
+          .card strong {
+            font-size: 18px;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+          }
+
+          th,
+          td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 9px 6px;
+            text-align: left;
+            font-size: 13px;
+          }
+
+          th {
+            color: #334155;
+            background: #f8fafc;
+          }
+
+          .tips {
+            margin-top: 10px;
+            padding-left: 18px;
+          }
+
+          .chart-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #f8fafc;
+            padding: 14px;
+            margin-top: 10px;
+          }
+
+          .bar-row {
+            display: grid;
+            grid-template-columns: 72px 1fr;
+            gap: 10px;
+            align-items: center;
+            margin: 9px 0;
+            font-size: 12px;
+            color: #475569;
+            font-weight: 700;
+          }
+
+          .bar-track {
+            display: grid;
+            gap: 4px;
+          }
+
+          .bar {
+            display: block;
+            height: 8px;
+            border-radius: 999px;
+          }
+
+          .income-bar {
+            background: #16a34a;
+          }
+
+          .expense-bar {
+            background: #dc2626;
+          }
+
+          .patrimony-bar {
+            background: #2563eb;
+          }
+
+          @media print {
+            body {
+              padding: 10px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Informe mensual Mis Finanzas</h1>
+        <p class="muted">Periodo seleccionado: ${report.month}</p>
+
+        <div class="cards">
+          <div class="card">
+            <span>Ingresos</span>
+            <strong>${formatMoney(report.currentCashflow.income)}</strong>
+          </div>
+
+          <div class="card">
+            <span>Gastos</span>
+            <strong>${formatMoney(report.currentCashflow.expenses)}</strong>
+          </div>
+
+          <div class="card">
+            <span>Patrimonio estimado</span>
+            <strong>${formatMoney(report.currentPatrimony.total)}</strong>
+          </div>
+
+          <div class="card">
+            <span>Patrimonio en USD</span>
+            <strong>${formatNumber(report.currentPatrimony.usdTotal)} USD</strong>
+          </div>
+        </div>
+
+        <h2>Alertas y tips</h2>
+        <ul class="tips">
+          ${report.tips.map(tip => `<li>${tip}</li>`).join('')}
+        </ul>
+
+        <h2>Ingresos vs gastos acumulado</h2>
+        <div class="chart-box">
+          ${cashflowBars || '<p class="muted">Sin datos para graficar</p>'}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Ingresos</th>
+              <th>Gastos</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody>${cashflowRows || '<tr><td colspan="4">Sin datos</td></tr>'}</tbody>
+        </table>
+
+        <h2>Categorías del periodo</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${categoryRows || '<tr><td colspan="2">Sin gastos registrados</td></tr>'}</tbody>
+        </table>
+
+        <h2>Evolución patrimonial</h2>
+        <p class="muted">
+          Conversión estimada con tipo de cambio actual:
+          USD $${dollarRate.toLocaleString()}
+        </p>
+
+        <div class="chart-box">
+          ${patrimonyBars || '<p class="muted">Sin datos patrimoniales para graficar</p>'}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Patrimonio ARS</th>
+              <th>Patrimonio USD</th>
+              <th>Tipo de cambio</th>
+            </tr>
+          </thead>
+          <tbody>${patrimonyRows || '<tr><td colspan="4">Sin datos patrimoniales</td></tr>'}</tbody>
+        </table>
+      </body>
+    </html>
+  `
+}
+
+function formatMoney(value) {
+  return `$${Math.round(value || 0).toLocaleString()}`
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString(undefined, {
+    maximumFractionDigits: 2
+  })
+}
+
 function getMonthlyPatrimonyTotals() {
   const grouped = {}
 
@@ -1770,17 +2652,24 @@ function getMonthlyPatrimonyTotals() {
     .filter(investment => investment.created_month)
     .forEach(investment => {
       if (!grouped[investment.created_month]) {
-        grouped[investment.created_month] = 0
+        grouped[investment.created_month] = {
+          total: 0,
+          usdTotal: 0
+        }
       }
 
-      grouped[investment.created_month] +=
+      grouped[investment.created_month].total +=
         getInvestmentAmountInARS(investment)
+
+      grouped[investment.created_month].usdTotal +=
+        getInvestmentAmountInUSD(investment)
     })
 
   return Object.entries(grouped)
-    .map(([month, total]) => ({
+    .map(([month, values]) => ({
       month,
-      total
+      total: values.total,
+      usdTotal: values.usdTotal
     }))
     .sort((a, b) => a.month.localeCompare(b.month))
 }
@@ -1791,6 +2680,14 @@ function getInvestmentAmountInARS(investment) {
   return investment.currency === 'USD'
     ? amount * dollarRate
     : amount
+}
+
+function getInvestmentAmountInUSD(investment) {
+  const amount = Number(investment.amount) || 0
+
+  return investment.currency === 'USD'
+    ? amount
+    : amount / dollarRate
 }
 
 function getShortMonthLabel(monthKey) {
@@ -2081,6 +2978,7 @@ function getCategoryColor(category) {
     Supermercado: '#22c55e',
     Mantenimiento: '#f59e0b',
     Impuestos: '#0ea5e9',
+    Emprendimiento: '#10b981',
     Vehiculos: '#9c0909',
     Ocio: '#8b5cf6',
     Ayudas: '#06b6d4',
@@ -2185,6 +3083,7 @@ async function start() {
   renderCardDates()
   checkCardReminders()
   syncAppTopOffset()
+  setTimeout(syncAppTopOffset, 150)
 
   if (
     'Notification' in window &&
@@ -2287,6 +3186,23 @@ window.deleteCardDate = async function(account) {
   await loadExpenses()
 
   renderCardDates()
+}
+
+window.deleteCustomCategory = async function(category) {
+  const confirmDelete = confirm(
+    `¿Eliminar la categoría ${category}?`
+  )
+
+  if (!confirmDelete) return
+
+  const customCategory = getExpenses('custom_categories')
+    .find(item => item.name === category)
+
+  if (!customCategory) return
+
+  await deleteExpense(customCategory.id)
+  await loadExpenses()
+  renderSettings()
 }
 
 start()
