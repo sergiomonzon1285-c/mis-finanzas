@@ -47,7 +47,6 @@ document.querySelector('#app').innerHTML = `
           🌙
         </button>
 
-        <button id="refresh-btn">🔄 Refrescar</button>
         <select class="month-select" id="month-select"></select>
       </div>
     </header>
@@ -93,9 +92,39 @@ document.querySelector('#app').innerHTML = `
 
   <main>
     <div id="dashboard-section" class="page-section dashboard-section">
+      <div class="period-health-card">
+        <div class="period-health-item spent">
+          <div>
+            <span id="income-consumed-label">0% de los ingresos consumidos</span>
+            <strong id="income-consumed-amount">$0</strong>
+          </div>
+          <div class="period-health-bar">
+            <i id="income-consumed-bar"></i>
+          </div>
+        </div>
+
+        <div class="period-health-item saved">
+          <div>
+            <span id="period-saved-label">$0 ahorrados este periodo</span>
+            <strong id="period-saved-percent">0%</strong>
+          </div>
+          <div class="period-health-bar">
+            <i id="period-saved-bar"></i>
+          </div>
+        </div>
+      </div>
+
       <section id="income-section" class="card income">
         <div class="card-header">
-          <h2>Ingresos</h2>
+          <h2>
+            <button
+              class="section-title-info"
+              type="button"
+              onclick="showSectionInfo('income')"
+            >
+              Ingreso/Ingreso estimado
+            </button>
+          </h2>
           <span id="income-total">$0</span>
         </div>
 
@@ -125,7 +154,15 @@ document.querySelector('#app').innerHTML = `
 
       <section id="unique-section" class="card unique">
         <div class="card-header">
-          <h2>Único Pago</h2>
+          <h2>
+            <button
+              class="section-title-info"
+              type="button"
+              onclick="showSectionInfo('unique')"
+            >
+              Gasto/Comprometido
+            </button>
+          </h2>
           <span id="unique-total">$0</span>
         </div>
 
@@ -139,6 +176,11 @@ document.querySelector('#app').innerHTML = `
         <div class="summary-item">
           <span>Total Gastos</span>
           <strong id="expenses-total">$0</strong>
+        </div>
+
+        <div class="summary-item">
+          <span>Ahorro/Inversión</span>
+          <strong id="savings-total">$0</strong>
         </div>
 
         <div class="summary-item">
@@ -400,10 +442,50 @@ document.querySelector('#app').innerHTML = `
               class="settings-list"
             ></div>
           </div>
+
+          <div class="summary-card">
+            <h3>Botones flotantes</h3>
+
+            <div class="settings-form">
+              <label class="settings-toggle">
+                <input type="checkbox" id="toggle-floating-add">
+                <span>Mostrar botón rápido de carga</span>
+              </label>
+
+              <label class="settings-toggle">
+                <input type="checkbox" id="toggle-floating-top">
+                <span>Mostrar botón subir</span>
+              </label>
+            </div>
+          </div>
         </div>
       </section>
     </div>
   </main>
+</div>
+
+<div class="floating-actions" id="floating-actions">
+  <button
+    class="floating-btn floating-top"
+    id="floating-top"
+    type="button"
+    aria-label="Subir"
+  >
+    ↑
+  </button>
+
+  <div class="floating-add-wrap">
+    <div class="floating-add-menu hidden" id="floating-add-menu"></div>
+
+    <button
+      class="floating-btn floating-add"
+      id="floating-add"
+      type="button"
+      aria-label="Carga rápida"
+    >
+      +
+    </button>
+  </div>
 </div>
 
 <div class="report-modal hidden" id="report-modal">
@@ -444,6 +526,7 @@ document.querySelector('#app').innerHTML = `
 
     <input type="text" id="expense-name" placeholder="Nombre">
     <input type="number" id="expense-amount" placeholder="Monto">
+    <input type="date" id="expense-date">
 
     <select id="expense-account">
       <option value="Visa">Visa</option>
@@ -462,7 +545,7 @@ document.querySelector('#app').innerHTML = `
     <input
       type="text"
       id="investment-bank"
-      placeholder="Banco"
+      placeholder="Banco o exchange"
       class="hidden-section"
     >
 
@@ -502,6 +585,7 @@ const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
 const expenseName = document.querySelector('#expense-name')
 const expenseAmount = document.querySelector('#expense-amount')
+const expenseDate = document.querySelector('#expense-date')
 const expenseAccount = document.querySelector('#expense-account')
 const expenseCategory = document.querySelector('#expense-category')
 const expenseCurrency = document.querySelector('#expense-currency')
@@ -547,11 +631,18 @@ const newCategoryName = document.querySelector('#new-category-name')
 const addCategoryButton = document.querySelector('#add-category')
 const customCategoriesList =
   document.querySelector('#custom-categories-list')
+const toggleFloatingAdd = document.querySelector('#toggle-floating-add')
+const toggleFloatingTop = document.querySelector('#toggle-floating-top')
+const floatingActions = document.querySelector('#floating-actions')
+const floatingAdd = document.querySelector('#floating-add')
+const floatingTop = document.querySelector('#floating-top')
+const floatingAddMenu = document.querySelector('#floating-add-menu')
 
 const cardRemindersStorageKey = 'mis-finanzas-card-reminders'
 const fixedTermRemindersStorageKey = 'mis-finanzas-fixed-term-reminders'
 const legacyCardDatesStorageKey = 'mis-finanzas-card-dates'
 const profileStorageKey = 'mis-finanzas-profile'
+const floatingSettingsStorageKey = 'mis-finanzas-floating-settings'
 const defaultAccounts = [
   'Visa',
   'Mastercard',
@@ -752,6 +843,25 @@ addCategoryButton.addEventListener('click', async () => {
   await addCustomCategory()
 })
 
+toggleFloatingAdd.addEventListener('change', () => {
+  saveFloatingSettings()
+})
+
+toggleFloatingTop.addEventListener('change', () => {
+  saveFloatingSettings()
+})
+
+floatingAdd.addEventListener('click', () => {
+  toggleFloatingAddMenu()
+})
+
+floatingTop.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+})
+
 monthlyReportButton.addEventListener('click', () => {
   generateMonthlyReport()
 })
@@ -770,6 +880,7 @@ function openModal(type) {
   expenseAccount.value = 'Visa'
   expenseName.value = ''
   expenseAmount.value = ''
+  expenseDate.value = getDateKey(new Date())
   expenseInstallments.value = ''
   expenseCurrency.value = 'ARS'
   investmentBank.value = ''
@@ -777,6 +888,7 @@ function openModal(type) {
 
   expenseAccount.style.display = 'block'
   expenseName.style.display = 'block'
+  expenseDate.style.display = 'block'
   expenseCurrency.style.display = 'none'
   expenseInstallments.style.display = 'none'
   investmentBank.style.display = 'none'
@@ -799,6 +911,7 @@ function openModal(type) {
     expenseCategory.selectedIndex = 0
     expenseAccount.style.display = 'none'
     expenseName.style.display = 'none'
+    expenseDate.style.display = 'none'
     updateInvestmentFields()
     return
   }
@@ -820,12 +933,20 @@ function openModal(type) {
 }
 
 function updateInvestmentFields() {
-  const isFixedTerm =
-    currentType === 'investments' &&
-    expenseCategory.value === 'Plazo Fijo'
+  const isInvestment = currentType === 'investments'
+  const isFixedTerm = isInvestment && expenseCategory.value === 'Plazo Fijo'
+  const acceptsInstitution =
+    isInvestment &&
+    ['Plazo Fijo', 'Fondos Comunes', 'Crypto'].includes(expenseCategory.value)
 
-  investmentBank.style.display = isFixedTerm ? 'block' : 'none'
+  investmentBank.style.display = acceptsInstitution ? 'block' : 'none'
   investmentDueDate.style.display = isFixedTerm ? 'block' : 'none'
+  investmentBank.placeholder =
+    expenseCategory.value === 'Crypto'
+      ? 'Exchange o banco opcional'
+      : expenseCategory.value === 'Fondos Comunes'
+      ? 'Banco opcional'
+      : 'Banco'
 }
 
 modal.addEventListener('click', event => {
@@ -841,6 +962,8 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
 
   const fixedTermBank = investmentBank.value.trim()
   const fixedTermDueDate = investmentDueDate.value
+  const investmentInstitution = investmentBank.value.trim()
+  const entryDate = expenseDate.value || getDateKey(new Date())
 
   const name =
     isFixedTerm
@@ -864,10 +987,14 @@ document.querySelector('#save-expense').addEventListener('click', async () => {
   let expense = {
     name,
     amount,
-    account: isFixedTerm ? fixedTermBank : expenseAccount.value,
+    account:
+      currentType === 'investments'
+        ? investmentInstitution
+        : expenseAccount.value,
     category: expenseCategory.value,
     currency: expenseCurrency.value || 'ARS',
-    created_month: selectedMonth
+    created_month: selectedMonth,
+    start_month: entryDate
   }
 
   if (isFixedTerm) {
@@ -1351,6 +1478,104 @@ function renderSettings() {
   renderAccountOptions()
   renderAccountAliasesForm()
   renderCustomCategories()
+  renderFloatingSettings()
+}
+
+function getFloatingSettings() {
+  try {
+    const savedSettings = localStorage.getItem(floatingSettingsStorageKey)
+
+    if (savedSettings) {
+      return JSON.parse(savedSettings)
+    }
+  } catch (error) {
+    console.error('Error leyendo botones flotantes', error)
+  }
+
+  return {
+    add: true,
+    top: true
+  }
+}
+
+function saveFloatingSettings() {
+  const settings = {
+    add: toggleFloatingAdd.checked,
+    top: toggleFloatingTop.checked
+  }
+
+  localStorage.setItem(
+    floatingSettingsStorageKey,
+    JSON.stringify(settings)
+  )
+
+  applyFloatingSettings(settings)
+}
+
+function renderFloatingSettings() {
+  const settings = getFloatingSettings()
+
+  toggleFloatingAdd.checked = settings.add
+  toggleFloatingTop.checked = settings.top
+  applyFloatingSettings(settings)
+}
+
+function applyFloatingSettings(settings = getFloatingSettings()) {
+  floatingAdd.classList.toggle('hidden-section', !settings.add)
+  floatingTop.classList.toggle('hidden-section', !settings.top)
+
+  if (!settings.add) {
+    floatingAddMenu.classList.add('hidden')
+  }
+}
+
+function toggleFloatingAddMenu() {
+  renderFloatingAddMenu()
+  floatingAddMenu.classList.toggle('hidden')
+}
+
+function renderFloatingAddMenu() {
+  const patrimonySection = document.querySelector('#patrimony-section')
+  const isPatrimonyVisible =
+    patrimonySection &&
+    !patrimonySection.classList.contains('hidden-section')
+
+  const actions = isPatrimonyVisible
+    ? [
+      {
+        label: 'Inversión',
+        type: 'investments'
+      }
+    ]
+    : [
+      {
+        label: 'Ingreso',
+        type: 'income'
+      },
+      {
+        label: 'Fijo',
+        type: 'fixed'
+      },
+      {
+        label: 'Cuota',
+        type: 'installments'
+      },
+      {
+        label: 'Compromiso',
+        type: 'unique'
+      }
+    ]
+
+  floatingAddMenu.innerHTML = actions
+    .map(action => `
+      <button
+        type="button"
+        onclick="openQuickAdd('${action.type}')"
+      >
+        ${action.label}
+      </button>
+    `)
+    .join('')
 }
 
 function getCardDates() {
@@ -1658,6 +1883,7 @@ function renderExpenses() {
   renderPatrimonyChart()
   renderInstallments()
   updateGlobalTotal()
+  renderPeriodHealth()
   renderCashflowChart()
   renderAccountsSummary()
   renderCategoriesSummary()
@@ -1809,6 +2035,7 @@ async function ensureDollarRateForSelectedMonth() {
     .find(rate => rate.created_month === selectedMonth)
 
   if (existingRate) return
+  if (!shouldFreezeDollarRate(selectedMonth)) return
 
   await addExpense('dollar_rates', {
     name: 'Dólar patrimonio',
@@ -1820,6 +2047,15 @@ async function ensureDollarRateForSelectedMonth() {
   })
 
   await loadExpenses()
+}
+
+function shouldFreezeDollarRate(monthKey) {
+  const today = new Date()
+  const currentMonthKey = getCurrentMonthKey()
+  const lastDayOfMonth =
+    new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+
+  return monthKey === currentMonthKey && today.getDate() === lastDayOfMonth
 }
 
 async function ensureInvestmentsForSelectedMonth() {
@@ -1904,6 +2140,13 @@ function getInvestmentDetails(expense) {
     return `${expense.category} · ${bank}${dueDate}`
   }
 
+  if (
+    ['Fondos Comunes', 'Crypto'].includes(expense.category) &&
+    expense.account
+  ) {
+    return `${expense.category} · ${expense.account}`
+  }
+
   return expense.category || 'Otros'
 }
 
@@ -1918,11 +2161,18 @@ function formatDateLabel(value) {
 }
 
 function createExpenseItem(expense, type) {
+  const details = [
+    getAccountLabel(expense.account),
+    isDateKey(expense.start_month)
+      ? formatDateLabel(expense.start_month)
+      : ''
+  ].filter(Boolean).join(' · ')
+
   return `
     <div class="expense-item">
       <div>
         <span>${expense.name}</span>
-        <small>${getAccountLabel(expense.account)}</small>
+        <small>${details}</small>
       </div>
 
       <div class="expense-actions">
@@ -3192,24 +3442,77 @@ function updateGlobalTotal() {
     .filter(item => item.created_month === selectedMonth)
     .reduce((acc, item) => acc + item.amount, 0)
 
-  const fixed = getExpenses('fixed')
+  const monthlyExpenses = getMonthlyDashboardExpenses()
+  const regularExpenses = monthlyExpenses
+    .filter(item => !isSavingsCategory(item.category))
+    .reduce((acc, item) => acc + item.amount, 0)
+  const savingsTotal = monthlyExpenses
+    .filter(item => isSavingsCategory(item.category))
     .reduce((acc, item) => acc + item.amount, 0)
 
-  const unique = getExpenses('unique')
-    .filter(item => item.created_month === selectedMonth)
-    .reduce((acc, item) => acc + item.amount, 0)
-
-  const installments = getActiveInstallments()
-    .reduce((acc, item) => acc + item.amount, 0)
-
-  const expensesTotal = fixed + unique + installments
-  const total = income - expensesTotal
+  const total = income - regularExpenses - savingsTotal
 
   document.querySelector('#expenses-total').innerText =
-    `$${expensesTotal.toLocaleString()}`
+    `$${regularExpenses.toLocaleString()}`
+
+  document.querySelector('#savings-total').innerText =
+    `$${savingsTotal.toLocaleString()}`
 
   document.querySelector('#balance-total').innerText =
     `$${total.toLocaleString()}`
+}
+
+function renderPeriodHealth() {
+  const income = getExpenses('income')
+    .filter(item => item.created_month === selectedMonth)
+    .reduce((acc, item) => acc + item.amount, 0)
+  const monthlyExpenses = getMonthlyDashboardExpenses()
+  const regularExpenses = monthlyExpenses
+    .filter(item => !isSavingsCategory(item.category))
+    .reduce((acc, item) => acc + item.amount, 0)
+  const savingsTotal = monthlyExpenses
+    .filter(item => isSavingsCategory(item.category))
+    .reduce((acc, item) => acc + item.amount, 0)
+  const savedAmount = savingsTotal
+  const consumedPercent =
+    income > 0 ? Math.min((regularExpenses / income) * 100, 100) : 0
+  const savedPercent =
+    income > 0 ? Math.min((savedAmount / income) * 100, 100) : 0
+
+  document.querySelector('#income-consumed-label').innerText =
+    `${Math.round(consumedPercent)}% de los ingresos consumidos`
+  document.querySelector('#income-consumed-amount').innerText =
+    `$${regularExpenses.toLocaleString()}`
+  document.querySelector('#income-consumed-bar').style.width =
+    `${Math.max(consumedPercent, regularExpenses > 0 ? 4 : 0)}%`
+
+  document.querySelector('#period-saved-label').innerText =
+    `$${savedAmount.toLocaleString()} ahorrados este periodo`
+  document.querySelector('#period-saved-percent').innerText =
+    `${Math.round(savedPercent)}%`
+  document.querySelector('#period-saved-bar').style.width =
+    `${Math.max(savedPercent, savedAmount > 0 ? 4 : 0)}%`
+}
+
+function getMonthlyDashboardExpenses() {
+  return [
+    ...getExpenses('fixed'),
+    ...getExpenses('unique')
+      .filter(item => item.created_month === selectedMonth),
+    ...getActiveInstallments()
+  ]
+}
+
+function isSavingsCategory(category) {
+  return normalizeText(category || '') === normalizeText('Ahorro/Inversión')
+}
+
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
 }
 
 async function loadDollarRate() {
@@ -3306,12 +3609,6 @@ function animateSection(section) {
   )
 }
 
-document.querySelector('#refresh-btn').addEventListener('click', async () => {
-  await loadExpenses()
-  renderExpenses()
-  alert('Datos actualizados')
-})
-
 window.removeExpense = async function(id) {
   const confirmDelete = confirm('¿Eliminar este gasto?')
 
@@ -3329,6 +3626,22 @@ window.toggleExpenseSection = function(type) {
   renderExpenses()
 }
 
+window.openQuickAdd = function(type) {
+  floatingAddMenu.classList.add('hidden')
+  openModal(type)
+}
+
+window.showSectionInfo = function(section) {
+  const messages = {
+    income:
+      'Ingreso estimado\n\nRepresenta el ingreso que esperás recibir durante el próximo período. Te permite planificar tus gastos antes de cobrar y conocer cuánto dinero tendrás disponible.',
+    unique:
+      'Compromisos\n\nSon gastos que ya sabés que deberás afrontar próximamente, como compras con tarjeta de crédito, cuotas, préstamos, impuestos o cualquier otro pago previsto.'
+  }
+
+  alert(messages[section] || '')
+}
+
 window.editExpense = function(id, type) {
   const expense = getExpenses(type)
     .find(item => item.id === id)
@@ -3341,6 +3654,10 @@ window.editExpense = function(id, type) {
   expenseName.value = expense.name || ''
   expenseAmount.value = expense.amount || ''
   expenseCategory.value = expense.category || ''
+  expenseDate.value =
+    isDateKey(expense.start_month)
+      ? expense.start_month
+      : getDateKey(new Date())
 
   if (expense.account) {
     expenseAccount.value = expense.account
@@ -3353,8 +3670,14 @@ window.editExpense = function(id, type) {
   if (type === 'investments') {
     updateInvestmentFields()
 
-    if (expense.category === 'Plazo Fijo') {
+    if (
+      ['Plazo Fijo', 'Fondos Comunes', 'Crypto']
+        .includes(expense.category)
+    ) {
       investmentBank.value = expense.account || expense.name || ''
+    }
+
+    if (expense.category === 'Plazo Fijo') {
       investmentDueDate.value = expense.start_month || ''
     }
   }
