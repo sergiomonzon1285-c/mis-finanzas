@@ -9,6 +9,7 @@ import {
 } from './app'
 
 import {
+  months,
   getCurrentMonthKey,
   generateMonthOptions,
   getMonthDifference
@@ -118,11 +119,12 @@ document.querySelector('#app').innerHTML = `
         <div class="card-header">
           <h2>
             <button
+              id="income-estimate-title"
               class="section-title-info"
               type="button"
               onclick="showSectionInfo('income')"
             >
-              Ingreso/Ingreso estimado
+              Ingreso estimado
             </button>
           </h2>
           <span id="income-total">$0</span>
@@ -1873,6 +1875,7 @@ function getActiveInstallments() {
 }
 
 function renderExpenses() {
+  renderIncomeEstimateTitle()
   renderIncome()
   renderFixed()
   renderUnique()
@@ -1888,6 +1891,17 @@ function renderExpenses() {
   renderAccountsSummary()
   renderCategoriesSummary()
   checkFixedTermReminders()
+}
+
+function renderIncomeEstimateTitle() {
+  const title = document.querySelector('#income-estimate-title')
+
+  if (!title) return
+
+  const monthNumber = Number(selectedMonth.split('-')[1])
+  const nextMonthName = months[monthNumber % 12].toLowerCase()
+
+  title.innerText = `Ingreso estimado para ${nextMonthName}`
 }
 
 function syncAppTopOffset() {
