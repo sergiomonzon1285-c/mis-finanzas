@@ -1,0 +1,25 @@
+{
+  "name": "Mis Finanzas",
+  "short_name": "Mis Finanzas",
+  "description": "Organizá ingresos, gastos, vencimientos e inversiones en un solo lugar.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eff6ff",
+  "theme_color": "#043f3b",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

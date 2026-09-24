@@ -21,7 +21,13 @@ document.querySelector('#app').innerHTML = `
     <header class="topbar">
       <div class="topbar-title-group">
         <h1>
-          <span class="brand-mark">MF</span>
+          <img
+            class="brand-mark"
+            src="/icon-192.png"
+            alt=""
+            width="34"
+            height="34"
+          >
           Mis Finanzas
         </h1>
 
