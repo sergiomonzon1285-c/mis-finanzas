@@ -65,6 +65,15 @@ document.querySelector('#app').innerHTML = `
         </button>
 
         <select class="month-select" id="month-select"></select>
+
+        <button
+          class="progress-entry-btn"
+          id="progress-entry-btn"
+          type="button"
+        >
+          <span aria-hidden="true">🏆</span>
+          <span>Conocé tu puntaje y tus logros</span>
+        </button>
       </div>
     </header>
 
@@ -556,6 +565,102 @@ document.querySelector('#app').innerHTML = `
         </div>
       </section>
     </div>
+
+    <div id="progress-section" class="page-section hidden-section">
+      <section class="progress-section">
+        <div class="progress-header">
+          <div>
+            <span class="progress-kicker">Prueba piloto</span>
+            <h2>Tu progreso financiero</h2>
+            <div class="progress-period-row">
+              <p id="progress-period-label"></p>
+              <span id="progress-period-status">Puntaje provisional</span>
+            </div>
+          </div>
+
+          <button id="progress-back-btn" type="button">
+            Volver al dashboard
+          </button>
+        </div>
+
+        <div class="progress-overview">
+          <div class="progress-score-ring" id="progress-score-ring">
+            <div>
+              <strong id="progress-total-score">0</strong>
+              <span>puntos</span>
+            </div>
+          </div>
+
+          <div class="progress-overview-copy">
+            <span class="progress-level" id="progress-level">
+              Empezando
+            </span>
+            <h3 id="progress-main-message">
+              Registrá tus ingresos para comenzar
+            </h3>
+            <p id="progress-score-breakdown"></p>
+          </div>
+        </div>
+
+        <div class="progress-savings-panel">
+          <div class="progress-savings-heading">
+            <div>
+              <span>Ruta del ahorro</span>
+              <strong id="progress-savings-percent">0%</strong>
+            </div>
+            <strong id="progress-savings-amount">$0</strong>
+          </div>
+
+          <div class="progress-savings-track">
+            <i id="progress-savings-bar"></i>
+            <span style="left:20%">10%</span>
+            <span style="left:40%">20%</span>
+            <span style="left:60%">30%</span>
+            <span style="left:80%">40%</span>
+            <span style="left:100%">50%</span>
+          </div>
+
+          <p id="progress-next-goal"></p>
+        </div>
+
+        <div class="progress-close-medal" id="progress-close-medal">
+          <div class="progress-medal-icon" id="progress-medal-icon">◇</div>
+          <div class="progress-medal-copy">
+            <span>Medalla de cierre mensual</span>
+            <strong id="progress-medal-name">En formación</strong>
+            <p id="progress-medal-message"></p>
+          </div>
+          <div class="progress-completion">
+            <strong id="progress-completion-percent">0%</strong>
+            <span>de objetivos logrados</span>
+            <div><i id="progress-completion-bar"></i></div>
+          </div>
+        </div>
+
+        <div class="progress-grid">
+          <div class="progress-panel">
+            <h3>Tareas del período</h3>
+            <div id="progress-tasks" class="progress-list"></div>
+          </div>
+
+          <div class="progress-panel">
+            <h3>Logros y medallas</h3>
+            <div id="progress-achievements" class="achievements-grid"></div>
+          </div>
+        </div>
+
+        <div class="progress-ranking-note">
+          <span aria-hidden="true">↗</span>
+          <div>
+            <strong>Ranking próximamente</strong>
+            <p>
+              La comparación será voluntaria y utilizará porcentajes,
+              constancia y alias; nunca mostrará montos personales.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 </div>
 
@@ -695,6 +800,7 @@ let dollarRate = 1230
 let expandedCategory = null
 let expandedAccount = null
 let tutorialStepIndex = 0
+let activeTutorialSteps = []
 const expandedExpenseSections = {
   income: false,
   fixed: false,
@@ -703,45 +809,105 @@ const expandedExpenseSections = {
   investments: false
 }
 
-const tutorialSteps = [
-  {
-    selector: '#dashboard-tab',
-    title: 'Tu presupuesto, en una mirada',
-    message:
-      'Mis Finanzas sirve para anticipar cómo vas a distribuir tu dinero. Elegí un período y cargá lo que esperás cobrar y pagar.'
-  },
-  {
-    selector: '#income-section',
-    title: 'Primero, definí el ingreso',
-    message: () => getIncomeTitleMode() === 'salary'
-      ? 'Esta tarjeta representa el sueldo del período seleccionado. Es la base para calcular cuánto podés gastar, ahorrar o invertir.'
-      : 'Esta tarjeta representa el dinero que esperás recibir el próximo mes. No es un saldo bancario: es la base de tu presupuesto antes de cobrar.'
-  },
-  {
-    selector: '#fixed-section',
-    title: 'Después, anotá los compromisos',
-    message:
-      'Registrá gastos fijos, cuotas y pagos previstos. La categoría y el medio de pago permiten entender dónde y cómo se va el dinero.'
-  },
-  {
-    selector: '.period-health-card',
-    title: 'Seguí el consumo del ingreso',
-    message:
-      'Las barras muestran qué porcentaje del ingreso ya está comprometido y cuánto destinaste específicamente a Ahorro/Inversión.'
-  },
-  {
-    selector: '#balance-section',
-    title: 'Leé el resultado del período',
-    message:
-      'Balance separa gastos, ahorro o inversión y el dinero restante. Así podés ajustar el presupuesto antes de que termine el mes.'
-  },
-  {
-    selector: '#settings-tab',
-    title: 'Adaptá la app a tu forma de cobrar',
-    message:
-      'En Configuración podés elegir si esta tarjeta dice “Ingreso estimado” para el mes siguiente o “Sueldo” del período seleccionado.'
-  }
-]
+const tutorialPages = {
+  dashboard: [
+    {
+      selector: '#dashboard-tab',
+      title: 'Tu presupuesto, en una mirada',
+      message:
+        'Mis Finanzas sirve para anticipar cómo vas a distribuir tu dinero. Elegí un período y cargá lo que esperás cobrar y pagar.'
+    },
+    {
+      selector: '#income-section',
+      title: 'Primero, definí el ingreso',
+      message: () => getIncomeTitleMode() === 'salary'
+        ? 'Esta tarjeta representa el sueldo del período seleccionado. Es la base para calcular cuánto podés gastar, ahorrar o invertir.'
+        : 'Esta tarjeta representa el dinero que esperás recibir el próximo mes. No es un saldo bancario: es la base de tu presupuesto antes de cobrar.'
+    },
+    {
+      selector: '#fixed-section',
+      title: 'Después, anotá los compromisos',
+      message:
+        'Registrá gastos fijos, cuotas y pagos previstos. La categoría y el medio de pago permiten entender dónde y cómo se va el dinero.'
+    },
+    {
+      selector: '.period-health-card',
+      title: 'Seguí el consumo del ingreso',
+      message:
+        'Las barras muestran qué porcentaje del ingreso ya está comprometido y cuánto destinaste específicamente a Ahorro/Inversión.'
+    },
+    {
+      selector: '#balance-section',
+      title: 'Leé el resultado del período',
+      message:
+        'Balance separa gastos, ahorro o inversión y el dinero restante. Así podés ajustar el presupuesto antes de que termine el mes.'
+    }
+  ],
+  patrimony: [
+    {
+      selector: '#patrimony-tab',
+      title: 'Tu patrimonio por período',
+      message:
+        'Este espacio reúne inversiones, ahorros y activos. Cada mes conserva su propia fotografía para que puedas comparar la evolución.'
+    },
+    {
+      selector: '#investments-summary',
+      title: 'Composición de tus inversiones',
+      message:
+        'Aquí ves cómo se distribuye el patrimonio entre acciones, fondos, criptomonedas, dólares y plazos fijos.'
+    },
+    {
+      selector: '.patrimony-totals-title',
+      title: 'Totales en ambas monedas',
+      message:
+        'Los totales se expresan en pesos y dólares con el tipo de cambio del período seleccionado.'
+    },
+    {
+      selector: '#patrimony-chart',
+      title: 'Observá la evolución',
+      message:
+        'El gráfico muestra si tu patrimonio crece o disminuye mes a mes. Mirá la tendencia, no solamente un resultado aislado.'
+    },
+    {
+      selector: '#investments-list',
+      title: 'Revisá cada inversión',
+      message:
+        'El detalle conserva moneda, institución y vencimiento cuando corresponde. Podés editar cada registro desde aquí.'
+    }
+  ],
+  progress: [
+    {
+      selector: '#progress-score-ring',
+      title: 'Tu puntaje financiero',
+      message:
+        'El puntaje combina hábitos de organización y porcentaje de ahorro. Durante el mes es provisional y se congela al cerrarse el período.'
+    },
+    {
+      selector: '.progress-savings-panel',
+      title: 'La ruta del ahorro',
+      message:
+        'Cada tramo premia ahorrar entre el 10% y el 50% de tus ingresos. El objetivo es avanzar con constancia, no competir por montos.'
+    },
+    {
+      selector: '#progress-tasks',
+      title: 'Hábitos que suman',
+      message:
+        'Registrar ingresos, ordenar gastos, categorizar y mantener un balance saludable suma puntos todos los meses.'
+    },
+    {
+      selector: '#progress-close-medal',
+      title: 'Medalla de cierre',
+      message:
+        'Al finalizar el mes recibís una medalla según el porcentaje de objetivos logrados. Estas medallas formarán parte de tu perfil.'
+    },
+    {
+      selector: '#progress-achievements',
+      title: 'Coleccioná logros',
+      message:
+        'Las insignias reconocen ahorro, planificación, equilibrio y buenos hábitos. Los logros bloqueados te muestran el próximo desafío.'
+    }
+  ]
+}
 
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
@@ -756,6 +922,33 @@ const investmentDueDate = document.querySelector('#investment-due-date')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
+const progressEntryButton = document.querySelector('#progress-entry-btn')
+const progressBackButton = document.querySelector('#progress-back-btn')
+const progressPeriodLabel = document.querySelector('#progress-period-label')
+const progressPeriodStatus = document.querySelector('#progress-period-status')
+const progressScoreRing = document.querySelector('#progress-score-ring')
+const progressTotalScore = document.querySelector('#progress-total-score')
+const progressLevel = document.querySelector('#progress-level')
+const progressMainMessage = document.querySelector('#progress-main-message')
+const progressScoreBreakdown =
+  document.querySelector('#progress-score-breakdown')
+const progressSavingsPercent =
+  document.querySelector('#progress-savings-percent')
+const progressSavingsAmount =
+  document.querySelector('#progress-savings-amount')
+const progressSavingsBar = document.querySelector('#progress-savings-bar')
+const progressNextGoal = document.querySelector('#progress-next-goal')
+const progressTasks = document.querySelector('#progress-tasks')
+const progressAchievements =
+  document.querySelector('#progress-achievements')
+const progressCloseMedal = document.querySelector('#progress-close-medal')
+const progressMedalIcon = document.querySelector('#progress-medal-icon')
+const progressMedalName = document.querySelector('#progress-medal-name')
+const progressMedalMessage = document.querySelector('#progress-medal-message')
+const progressCompletionPercent =
+  document.querySelector('#progress-completion-percent')
+const progressCompletionBar =
+  document.querySelector('#progress-completion-bar')
 const userGreeting = document.querySelector('#user-greeting')
 const tipsButton = document.querySelector('#tips-btn')
 const helpButton = document.querySelector('#help-btn')
@@ -818,6 +1011,7 @@ const profileStorageKey = 'mis-finanzas-profile'
 const floatingSettingsStorageKey = 'mis-finanzas-floating-settings'
 const incomeTitleModeStorageKey = 'mis-finanzas-income-title-mode'
 const colorPaletteStorageKey = 'mis-finanzas-color-palette'
+const progressSnapshotType = 'progress_snapshots'
 const defaultAccounts = [
   'Visa',
   'Mastercard',
@@ -924,7 +1118,7 @@ tutorialPrevious.addEventListener('click', () => {
 })
 
 tutorialNext.addEventListener('click', () => {
-  if (tutorialStepIndex === tutorialSteps.length - 1) {
+  if (tutorialStepIndex === activeTutorialSteps.length - 1) {
     closeTutorial()
     return
   }
@@ -960,7 +1154,7 @@ document.addEventListener('keydown', (event) => {
   }
 
   if (event.key === 'ArrowRight') {
-    if (tutorialStepIndex === tutorialSteps.length - 1) {
+    if (tutorialStepIndex === activeTutorialSteps.length - 1) {
       closeTutorial()
     } else {
       showTutorialStep(tutorialStepIndex + 1)
@@ -993,6 +1187,7 @@ monthSelect.addEventListener('change', async () => {
   selectedMonth = monthSelect.value
   await ensureDollarRateForSelectedMonth()
   await ensureInvestmentsForSelectedMonth()
+  await ensureProgressSnapshotForMonth(selectedMonth)
   renderExpenses()
 })
 
@@ -1019,7 +1214,7 @@ window.addEventListener('resize', () => {
 
   if (!tutorialOverlay.classList.contains('hidden')) {
     positionTutorialCard(
-      document.querySelector(tutorialSteps[tutorialStepIndex].selector)
+      document.querySelector(activeTutorialSteps[tutorialStepIndex].selector)
     )
   }
 })
@@ -1434,7 +1629,17 @@ function closeFinanceTip() {
 
 function startTutorial() {
   closeFinanceTip()
-  document.querySelector('#dashboard-tab').click()
+  const progressVisible =
+    !document.querySelector('#progress-section').classList.contains('hidden-section')
+  const patrimonyVisible =
+    !document.querySelector('#patrimony-section').classList.contains('hidden-section')
+
+  activeTutorialSteps = progressVisible
+    ? tutorialPages.progress
+    : patrimonyVisible
+      ? tutorialPages.patrimony
+      : tutorialPages.dashboard
+
   tutorialOverlay.classList.remove('hidden')
   tutorialOverlay.setAttribute('aria-hidden', 'false')
   document.body.classList.add('tutorial-active')
@@ -1444,12 +1649,12 @@ function startTutorial() {
 function showTutorialStep(index) {
   tutorialStepIndex = Math.max(
     0,
-    Math.min(index, tutorialSteps.length - 1)
+    Math.min(index, activeTutorialSteps.length - 1)
   )
 
   clearTutorialHighlight()
 
-  const step = tutorialSteps[tutorialStepIndex]
+  const step = activeTutorialSteps[tutorialStepIndex]
   const target = document.querySelector(step.selector)
 
   if (!target) return
@@ -1463,7 +1668,7 @@ function showTutorialStep(index) {
   }
 
   tutorialStep.innerText =
-    `${tutorialStepIndex + 1} de ${tutorialSteps.length}`
+    `${tutorialStepIndex + 1} de ${activeTutorialSteps.length}`
   tutorialTitle.innerText = step.title
   tutorialMessage.innerText =
     typeof step.message === 'function'
@@ -1471,7 +1676,7 @@ function showTutorialStep(index) {
       : step.message
   tutorialPrevious.disabled = tutorialStepIndex === 0
   tutorialNext.innerText =
-    tutorialStepIndex === tutorialSteps.length - 1
+    tutorialStepIndex === activeTutorialSteps.length - 1
       ? 'Entendido'
       : 'Siguiente'
 
@@ -1584,6 +1789,7 @@ function playTipSound() {
 
 function getFinanceTips() {
   return [
+    'El primer paso para mejorar tus finanzas es no mentirte a vos mismo: proponete objetivos realistas y cumplilos con constancia.',
     'Separá primero un porcentaje para ahorro antes de gastar el resto.',
     'Revisá los gastos chicos repetidos: suelen pesar más de lo que parecen.',
     'Si una categoría crece dos meses seguidos, poné un límite para el próximo mes.',
@@ -2273,6 +2479,7 @@ function renderExpenses() {
   renderCashflowChart()
   renderAccountsSummary()
   renderCategoriesSummary()
+  renderProgressDashboard()
   checkFixedTermReminders()
 }
 
@@ -3894,13 +4101,408 @@ function renderPeriodHealth() {
     `${Math.max(savedPercent, savedAmount > 0 ? 4 : 0)}%`
 }
 
-function getMonthlyDashboardExpenses() {
-  return [
-    ...getExpenses('fixed'),
-    ...getExpenses('unique')
-      .filter(item => item.created_month === selectedMonth),
-    ...getActiveInstallments()
+function renderProgressDashboard() {
+  const calculatedMetrics = calculateProgressMetrics(selectedMonth)
+  const snapshot = getProgressSnapshot(selectedMonth)
+  const metrics = snapshot
+    ? { ...calculatedMetrics, ...snapshot, isClosed: true }
+    : { ...calculatedMetrics, isClosed: false }
+  const {
+    income,
+    savingsAmount,
+    savingsRate,
+    habitPoints,
+    savingsPoints,
+    totalScore,
+    tasks,
+    achievements,
+    completionRate,
+    medal
+  } = metrics
+  const achievedMilestone = [...getSavingsMilestones()]
+    .reverse()
+    .find(item => savingsRate >= item.percent)
+  const nextMilestone = getSavingsMilestones()
+    .find(item => savingsRate < item.percent)
+  const scoreProgress = Math.min((totalScore / 1200) * 100, 100)
+  const [year, monthNumber] = selectedMonth.split('-').map(Number)
+  const level = getProgressLevel(totalScore)
+
+  progressPeriodLabel.innerText = `${months[monthNumber - 1]} ${year}`
+  progressPeriodStatus.innerText = metrics.isClosed
+    ? 'Período cerrado'
+    : 'Puntaje provisional'
+  progressPeriodStatus.classList.toggle('closed', metrics.isClosed)
+  progressTotalScore.innerText = totalScore.toLocaleString()
+  progressScoreRing.style.setProperty('--score-progress', scoreProgress)
+  progressLevel.innerText = level
+  progressMainMessage.innerText = achievedMilestone
+    ? achievedMilestone.name
+    : income > 0
+      ? 'Tu ruta del ahorro ya comenzó'
+      : 'Registrá tus ingresos para comenzar'
+  progressScoreBreakdown.innerText =
+    `${savingsPoints.toLocaleString()} puntos por ahorro + ` +
+    `${habitPoints} por hábitos del período`
+  progressSavingsPercent.innerText =
+    `${savingsRate.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`
+  progressSavingsAmount.innerText = `$${savingsAmount.toLocaleString()}`
+  progressSavingsBar.style.width =
+    `${Math.min((savingsRate / 50) * 100, 100)}%`
+
+  if (metrics.isClosed) {
+    progressNextGoal.innerText =
+      'Este período ya cerró: el puntaje y la medalla quedaron guardados.'
+  } else if (!income) {
+    progressNextGoal.innerText =
+      'Registrá un ingreso para calcular tu porcentaje y tus próximos puntos.'
+  } else if (nextMilestone) {
+    const targetAmount = income * (nextMilestone.percent / 100)
+    const missingAmount = Math.max(targetAmount - savingsAmount, 0)
+
+    progressNextGoal.innerText =
+      `Te faltan $${Math.ceil(missingAmount).toLocaleString()} para llegar ` +
+      `al ${nextMilestone.percent}% y alcanzar ${nextMilestone.points} puntos.`
+  } else {
+    progressNextGoal.innerText =
+      'Alcanzaste la meta máxima mensual de ahorro. Ahora cuidá la constancia.'
+  }
+
+  progressMedalIcon.innerText = medal.icon
+  progressMedalName.innerText = medal.name
+  progressMedalMessage.innerText = metrics.isClosed
+    ? `Medalla obtenida al cierre de ${months[monthNumber - 1].toLowerCase()}.`
+    : `${medal.name} sería tu medalla si el período cerrara hoy.`
+  progressCompletionPercent.innerText = `${Math.round(completionRate)}%`
+  progressCompletionBar.style.width = `${Math.min(completionRate, 100)}%`
+  progressCloseMedal.dataset.tier = medal.tier
+
+  progressTasks.innerHTML = tasks
+    .map(task => `
+      <div class="progress-task ${task.complete ? 'complete' : ''}">
+        <span class="progress-task-status" aria-hidden="true">
+          ${task.complete ? '✓' : '○'}
+        </span>
+        <span>${task.label}</span>
+        <strong>+${task.points}</strong>
+      </div>
+    `)
+    .join('')
+
+  progressAchievements.innerHTML = achievements
+    .map(achievement => `
+      <div class="achievement ${achievement.unlocked ? 'unlocked' : ''}">
+        <span class="achievement-icon" aria-hidden="true">
+          ${achievement.icon}
+        </span>
+        <div>
+          <strong>${achievement.name}</strong>
+          <small>${achievement.description}</small>
+        </div>
+      </div>
+    `)
+    .join('')
+}
+
+function calculateProgressMetrics(monthKey) {
+  const income = getExpenses('income')
+    .filter(item => item.created_month === monthKey)
+    .reduce((acc, item) => acc + Number(item.amount || 0), 0)
+  const monthlyExpenses = getMonthlyDashboardExpenses(monthKey)
+  const savingsAmount = monthlyExpenses
+    .filter(item => isSavingsCategory(item.category))
+    .reduce((acc, item) => acc + Number(item.amount || 0), 0)
+  const regularExpenses = monthlyExpenses
+    .filter(item => !isSavingsCategory(item.category))
+    .reduce((acc, item) => acc + Number(item.amount || 0), 0)
+  const balance = income - regularExpenses - savingsAmount
+  const savingsRate = income > 0
+    ? Math.max((savingsAmount / income) * 100, 0)
+    : 0
+  const milestones = [
+    { percent: 10, points: 100, name: 'Primer colchón' },
+    { percent: 20, points: 250, name: 'Ahorro sólido' },
+    { percent: 30, points: 450, name: 'Gran reserva' },
+    { percent: 40, points: 700, name: 'Disciplina financiera' },
+    { percent: 50, points: 1000, name: 'Maestría del ahorro' }
   ]
+  const achievedMilestone = [...milestones]
+    .reverse()
+    .find(item => savingsRate >= item.percent)
+  const categoryCount = new Set(
+    monthlyExpenses
+      .map(item => normalizeText(item.category))
+      .filter(Boolean)
+  ).size
+  const tasks = [
+    {
+      id: 'income',
+      label: 'Registrar los ingresos del período',
+      complete: income > 0,
+      points: 25
+    },
+    {
+      id: 'expenses',
+      label: 'Organizar al menos un gasto o compromiso',
+      complete: monthlyExpenses.some(
+        item => !isSavingsCategory(item.category)
+      ),
+      points: 25
+    },
+    {
+      id: 'savings',
+      label: 'Realizar un aporte a Ahorro/Inversión',
+      complete: savingsAmount > 0,
+      points: 25
+    },
+    {
+      id: 'balance',
+      label: 'Mantener un balance disponible no negativo',
+      complete: income > 0 && balance >= 0,
+      points: 25
+    },
+    {
+      id: 'categories',
+      label: 'Categorizar todos los movimientos del período',
+      complete:
+        monthlyExpenses.length > 0 &&
+        monthlyExpenses.every(item => Boolean(item.category)),
+      points: 25
+    },
+    {
+      id: 'diversity',
+      label: 'Planificar gastos en al menos tres categorías',
+      complete: categoryCount >= 3,
+      points: 25
+    },
+    {
+      id: 'payment-methods',
+      label: 'Identificar los medios de pago utilizados',
+      complete:
+        monthlyExpenses.length > 0 &&
+        monthlyExpenses.every(item => Boolean(item.account)),
+      points: 25
+    },
+    {
+      id: 'spending-control',
+      label: 'Mantener los gastos por debajo del 80% del ingreso',
+      complete: income > 0 && regularExpenses <= income * .8,
+      points: 25
+    }
+  ]
+  const habitPoints = tasks
+    .filter(task => task.complete)
+    .reduce((total, task) => total + task.points, 0)
+  const savingsPoints = achievedMilestone?.points || 0
+  const totalScore = savingsPoints + habitPoints
+  const achievements = [
+    {
+      id: 'first-budget',
+      icon: '✓',
+      name: 'Primer presupuesto',
+      description: 'Ingresos y compromisos registrados',
+      unlocked: income > 0 && monthlyExpenses.length > 0
+    },
+    ...milestones.map(item => ({
+      id: `savings-${item.percent}`,
+      icon: `${item.percent}%`,
+      name: item.name,
+      description: `Ahorraste al menos ${item.percent}% de tus ingresos`,
+      unlocked: savingsRate >= item.percent
+    })),
+    {
+      id: 'balanced-month',
+      icon: '+',
+      name: 'Mes equilibrado',
+      description: 'Terminaste con un balance disponible positivo',
+      unlocked: income > 0 && balance > 0
+    },
+    {
+      id: 'organized-finances',
+      icon: 'ORD',
+      name: 'Finanzas ordenadas',
+      description: 'Todos tus movimientos tienen categoría y medio de pago',
+      unlocked:
+        monthlyExpenses.length > 0 &&
+        monthlyExpenses.every(item => item.category && item.account)
+    },
+    {
+      id: 'diverse-plan',
+      icon: '3+',
+      name: 'Plan diversificado',
+      description: 'Organizaste al menos tres categorías de gastos',
+      unlocked: categoryCount >= 3
+    },
+    {
+      id: 'controlled-spending',
+      icon: '<80',
+      name: 'Gasto bajo control',
+      description: 'Tus gastos no superaron el 80% de tus ingresos',
+      unlocked: income > 0 && regularExpenses <= income * .8
+    },
+    {
+      id: 'future-planner',
+      icon: 'CAL',
+      name: 'Planificador',
+      description: 'Anticipaste gastos fijos o cuotas del período',
+      unlocked:
+        getExpenses('fixed').length > 0 ||
+        getActiveInstallmentsForMonth(monthKey).length > 0
+    }
+  ]
+  const completionRate = achievements.length
+    ? achievements.filter(item => item.unlocked).length / achievements.length * 100
+    : 0
+
+  return {
+    income,
+    monthlyExpenses,
+    savingsAmount,
+    regularExpenses,
+    balance,
+    savingsRate,
+    tasks,
+    achievements,
+    habitPoints,
+    savingsPoints,
+    totalScore,
+    completionRate,
+    medal: getMonthlyMedal(completionRate)
+  }
+}
+
+function getSavingsMilestones() {
+  return [
+    { percent: 10, points: 100, name: 'Primer colchón' },
+    { percent: 20, points: 250, name: 'Ahorro sólido' },
+    { percent: 30, points: 450, name: 'Gran reserva' },
+    { percent: 40, points: 700, name: 'Disciplina financiera' },
+    { percent: 50, points: 1000, name: 'Maestría del ahorro' }
+  ]
+}
+
+function getMonthlyMedal(completionRate) {
+  if (completionRate >= 90) {
+    return { tier: 'diamond', icon: '◆', name: 'Medalla Diamante' }
+  }
+
+  if (completionRate >= 75) {
+    return { tier: 'gold', icon: '●', name: 'Medalla Oro' }
+  }
+
+  if (completionRate >= 60) {
+    return { tier: 'silver', icon: '●', name: 'Medalla Plata' }
+  }
+
+  if (completionRate >= 40) {
+    return { tier: 'bronze', icon: '●', name: 'Medalla Bronce' }
+  }
+
+  return { tier: 'training', icon: '◇', name: 'En formación' }
+}
+
+function getProgressSnapshot(monthKey) {
+  const row = getExpenses(progressSnapshotType)
+    .find(item => item.created_month === monthKey)
+
+  if (!row) return null
+
+  try {
+    const saved = JSON.parse(row.name || '{}')
+    const calculated = calculateProgressMetrics(monthKey)
+    const unlockedAchievements = new Set(saved.unlockedAchievements || [])
+    const completedTasks = new Set(saved.completedTasks || [])
+
+    return {
+      ...saved,
+      totalScore: Number(row.amount) || 0,
+      medal: getMonthlyMedal(Number(saved.completionRate) || 0),
+      achievements: calculated.achievements.map(item => ({
+        ...item,
+        unlocked: unlockedAchievements.has(item.id)
+      })),
+      tasks: calculated.tasks.map(item => ({
+        ...item,
+        complete: completedTasks.has(item.id)
+      }))
+    }
+  } catch (error) {
+    console.error('No se pudo leer el cierre de puntaje', error)
+    return null
+  }
+}
+
+async function ensureProgressSnapshotForMonth(monthKey) {
+  if (!monthKey || monthKey >= getCurrentMonthKey()) return
+  if (getProgressSnapshot(monthKey)) return
+
+  const metrics = calculateProgressMetrics(monthKey)
+
+  if (!metrics.income && metrics.monthlyExpenses.length === 0) return
+
+  const payload = {
+    income: metrics.income,
+    savingsAmount: metrics.savingsAmount,
+    savingsRate: metrics.savingsRate,
+    habitPoints: metrics.habitPoints,
+    savingsPoints: metrics.savingsPoints,
+    completionRate: metrics.completionRate,
+    unlockedAchievements: metrics.achievements
+      .filter(item => item.unlocked)
+      .map(item => item.id),
+    completedTasks: metrics.tasks
+      .filter(item => item.complete)
+      .map(item => item.id)
+  }
+
+  await addExpense(progressSnapshotType, {
+    name: JSON.stringify(payload),
+    amount: metrics.totalScore,
+    account: 'Gamificación',
+    category: metrics.medal.name,
+    currency: 'PTS',
+    created_month: monthKey
+  })
+
+  await loadExpenses()
+}
+
+function getPreviousMonthKey(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number)
+  const date = new Date(year, month - 2, 1)
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+function getProgressLevel(score) {
+  if (score >= 900) return 'Nivel maestro'
+  if (score >= 600) return 'Nivel disciplinado'
+  if (score >= 300) return 'Nivel constante'
+  if (score >= 100) return 'Nivel en marcha'
+  return 'Nivel inicial'
+}
+
+function getMonthlyDashboardExpenses(monthKey = selectedMonth) {
+  return [
+    ...getExpenses('fixed')
+      .filter(item => !item.created_month || item.created_month <= monthKey),
+    ...getExpenses('unique')
+      .filter(item => item.created_month === monthKey),
+    ...getActiveInstallmentsForMonth(monthKey)
+  ]
+}
+
+function getActiveInstallmentsForMonth(monthKey) {
+  return getExpenses('installments')
+    .filter(expense => {
+      const monthsPassed = getMonthDifference(
+        expense.start_month,
+        monthKey
+      )
+      const remaining = expense.installments - monthsPassed
+
+      return remaining > 0 && monthsPassed >= 0
+    })
 }
 
 function isSavingsCategory(category) {
@@ -3933,11 +4535,14 @@ async function start() {
   const dashboardSection = document.querySelector('#dashboard-section')
   const patrimonySection = document.querySelector('#patrimony-section')
   const settingsSection = document.querySelector('#settings-section')
+  const progressSection = document.querySelector('#progress-section')
 
   dashboardTab.addEventListener('click', () => {
     appShell.classList.remove('patrimony-view')
+    appShell.classList.remove('progress-view')
     patrimonySection.classList.add('hidden-section')
     settingsSection.classList.add('hidden-section')
+    progressSection.classList.add('hidden-section')
     dashboardSection.classList.remove('hidden-section')
     dashboardTab.classList.add('active')
     patrimonyTab.classList.remove('active')
@@ -3948,8 +4553,10 @@ async function start() {
 
   patrimonyTab.addEventListener('click', () => {
     appShell.classList.add('patrimony-view')
+    appShell.classList.remove('progress-view')
     dashboardSection.classList.add('hidden-section')
     settingsSection.classList.add('hidden-section')
+    progressSection.classList.add('hidden-section')
     patrimonySection.classList.remove('hidden-section')
     patrimonyTab.classList.add('active')
     dashboardTab.classList.remove('active')
@@ -3960,8 +4567,10 @@ async function start() {
 
   settingsTab.addEventListener('click', () => {
     appShell.classList.add('patrimony-view')
+    appShell.classList.remove('progress-view')
     dashboardSection.classList.add('hidden-section')
     patrimonySection.classList.add('hidden-section')
+    progressSection.classList.add('hidden-section')
     settingsSection.classList.remove('hidden-section')
     settingsTab.classList.add('active')
     dashboardTab.classList.remove('active')
@@ -3971,10 +4580,34 @@ async function start() {
     animateSection(settingsSection)
   })
 
+  progressEntryButton.addEventListener('click', () => {
+    appShell.classList.remove('patrimony-view')
+    appShell.classList.add('progress-view')
+    dashboardSection.classList.add('hidden-section')
+    patrimonySection.classList.add('hidden-section')
+    settingsSection.classList.add('hidden-section')
+    progressSection.classList.remove('hidden-section')
+    dashboardTab.classList.remove('active')
+    patrimonyTab.classList.remove('active')
+    settingsTab.classList.remove('active')
+    renderProgressDashboard()
+    syncAppTopOffset()
+    animateSection(progressSection)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+
+  progressBackButton.addEventListener('click', () => {
+    dashboardTab.click()
+  })
+
   await loadDollarRate()
   await loadExpenses()
   await ensureDollarRateForSelectedMonth()
   await ensureInvestmentsForSelectedMonth()
+  await ensureProgressSnapshotForMonth(
+    getPreviousMonthKey(getCurrentMonthKey())
+  )
+  await ensureProgressSnapshotForMonth(selectedMonth)
   renderSettings()
   renderExpenses()
   renderCardDates()
