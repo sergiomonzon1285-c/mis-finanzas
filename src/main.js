@@ -35,6 +35,16 @@ document.querySelector('#app').innerHTML = `
           >
             💡
           </button>
+
+          <button
+            class="help-btn"
+            id="help-btn"
+            type="button"
+            aria-label="Abrir tutorial"
+            title="Cómo usar Mis Finanzas"
+          >
+            ?
+          </button>
         </div>
       </div>
 
@@ -446,6 +456,83 @@ document.querySelector('#app').innerHTML = `
           </div>
 
           <div class="summary-card">
+            <h3>Nombre del ingreso</h3>
+
+            <div class="settings-form">
+              <label class="settings-field" for="income-title-mode">
+                Mostrar la tarjeta como
+              </label>
+
+              <select id="income-title-mode">
+                <option value="estimate">
+                  Ingreso estimado para el mes siguiente
+                </option>
+                <option value="salary">
+                  Sueldo del período seleccionado
+                </option>
+              </select>
+
+              <small class="settings-note">
+                El cálculo no cambia; solo cambia la forma de presentar el ingreso.
+              </small>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>Apariencia</h3>
+
+            <p class="settings-card-description">
+              Elegí una combinación completa de colores para la interfaz.
+            </p>
+
+            <div class="palette-options" id="palette-options">
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="classic">
+                <span class="palette-copy">
+                  <strong>Clásica</strong>
+                  <small>Clara y equilibrada</small>
+                </span>
+                <span class="palette-swatches palette-classic" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="breeze">
+                <span class="palette-copy">
+                  <strong>Brisa</strong>
+                  <small>Fresca y serena</small>
+                </span>
+                <span class="palette-swatches palette-breeze" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="garden">
+                <span class="palette-copy">
+                  <strong>Jardín</strong>
+                  <small>Natural y optimista</small>
+                </span>
+                <span class="palette-swatches palette-garden" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="coral">
+                <span class="palette-copy">
+                  <strong>Coral</strong>
+                  <small>Cálida y enérgica</small>
+                </span>
+                <span class="palette-swatches palette-coral" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="summary-card">
             <h3>Botones flotantes</h3>
 
             <div class="settings-form">
@@ -522,6 +609,32 @@ document.querySelector('#app').innerHTML = `
   </div>
 </div>
 
+<div
+  class="tutorial-overlay hidden"
+  id="tutorial-overlay"
+  aria-hidden="true"
+>
+  <div class="tutorial-card" id="tutorial-card" role="dialog" aria-modal="true">
+    <button
+      id="close-tutorial"
+      class="tutorial-close"
+      type="button"
+      aria-label="Cerrar tutorial"
+    >
+      ×
+    </button>
+
+    <span class="tutorial-step" id="tutorial-step"></span>
+    <h2 id="tutorial-title"></h2>
+    <p id="tutorial-message"></p>
+
+    <div class="tutorial-actions">
+      <button id="tutorial-previous" type="button">Anterior</button>
+      <button id="tutorial-next" type="button">Siguiente</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal hidden" id="modal">
   <div class="modal-content">
     <h2 id="modal-title">Agregar</h2>
@@ -575,6 +688,7 @@ let selectedMonth = getCurrentMonthKey()
 let dollarRate = 1230
 let expandedCategory = null
 let expandedAccount = null
+let tutorialStepIndex = 0
 const expandedExpenseSections = {
   income: false,
   fixed: false,
@@ -582,6 +696,46 @@ const expandedExpenseSections = {
   unique: false,
   investments: false
 }
+
+const tutorialSteps = [
+  {
+    selector: '#dashboard-tab',
+    title: 'Tu presupuesto, en una mirada',
+    message:
+      'Mis Finanzas sirve para anticipar cómo vas a distribuir tu dinero. Elegí un período y cargá lo que esperás cobrar y pagar.'
+  },
+  {
+    selector: '#income-section',
+    title: 'Primero, definí el ingreso',
+    message: () => getIncomeTitleMode() === 'salary'
+      ? 'Esta tarjeta representa el sueldo del período seleccionado. Es la base para calcular cuánto podés gastar, ahorrar o invertir.'
+      : 'Esta tarjeta representa el dinero que esperás recibir el próximo mes. No es un saldo bancario: es la base de tu presupuesto antes de cobrar.'
+  },
+  {
+    selector: '#fixed-section',
+    title: 'Después, anotá los compromisos',
+    message:
+      'Registrá gastos fijos, cuotas y pagos previstos. La categoría y el medio de pago permiten entender dónde y cómo se va el dinero.'
+  },
+  {
+    selector: '.period-health-card',
+    title: 'Seguí el consumo del ingreso',
+    message:
+      'Las barras muestran qué porcentaje del ingreso ya está comprometido y cuánto destinaste específicamente a Ahorro/Inversión.'
+  },
+  {
+    selector: '#balance-section',
+    title: 'Leé el resultado del período',
+    message:
+      'Balance separa gastos, ahorro o inversión y el dinero restante. Así podés ajustar el presupuesto antes de que termine el mes.'
+  },
+  {
+    selector: '#settings-tab',
+    title: 'Adaptá la app a tu forma de cobrar',
+    message:
+      'En Configuración podés elegir si esta tarjeta dice “Ingreso estimado” para el mes siguiente o “Sueldo” del período seleccionado.'
+  }
+]
 
 const modal = document.querySelector('#modal')
 const modalTitle = document.querySelector('#modal-title')
@@ -598,6 +752,7 @@ const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
 const userGreeting = document.querySelector('#user-greeting')
 const tipsButton = document.querySelector('#tips-btn')
+const helpButton = document.querySelector('#help-btn')
 const monthlyReportButton = document.querySelector('#monthly-report-btn')
 const reportModal = document.querySelector('#report-modal')
 const reportFrame = document.querySelector('#report-frame')
@@ -606,6 +761,14 @@ const printReportButton = document.querySelector('#print-report')
 const tipOverlay = document.querySelector('#tip-overlay')
 const tipMessage = document.querySelector('#tip-message')
 const closeTipButton = document.querySelector('#close-tip')
+const tutorialOverlay = document.querySelector('#tutorial-overlay')
+const tutorialCard = document.querySelector('#tutorial-card')
+const tutorialStep = document.querySelector('#tutorial-step')
+const tutorialTitle = document.querySelector('#tutorial-title')
+const tutorialMessage = document.querySelector('#tutorial-message')
+const tutorialPrevious = document.querySelector('#tutorial-previous')
+const tutorialNext = document.querySelector('#tutorial-next')
+const closeTutorialButton = document.querySelector('#close-tutorial')
 const cardDateAccount = document.querySelector('#card-date-account')
 const cardClosingDay = document.querySelector('#card-closing-day')
 const cardDueDay = document.querySelector('#card-due-day')
@@ -633,6 +796,8 @@ const newCategoryName = document.querySelector('#new-category-name')
 const addCategoryButton = document.querySelector('#add-category')
 const customCategoriesList =
   document.querySelector('#custom-categories-list')
+const incomeTitleMode = document.querySelector('#income-title-mode')
+const paletteOptions = document.querySelector('#palette-options')
 const toggleFloatingAdd = document.querySelector('#toggle-floating-add')
 const toggleFloatingTop = document.querySelector('#toggle-floating-top')
 const floatingActions = document.querySelector('#floating-actions')
@@ -645,6 +810,8 @@ const fixedTermRemindersStorageKey = 'mis-finanzas-fixed-term-reminders'
 const legacyCardDatesStorageKey = 'mis-finanzas-card-dates'
 const profileStorageKey = 'mis-finanzas-profile'
 const floatingSettingsStorageKey = 'mis-finanzas-floating-settings'
+const incomeTitleModeStorageKey = 'mis-finanzas-income-title-mode'
+const colorPaletteStorageKey = 'mis-finanzas-color-palette'
 const defaultAccounts = [
   'Visa',
   'Mastercard',
@@ -708,6 +875,8 @@ const defaultExpenseCategories = [
 
 const savedTheme = localStorage.getItem('theme')
 
+applyColorPalette()
+
 if (savedTheme === 'dark') {
   document.body.classList.add('dark-mode')
   themeToggle.innerText = '☀️'
@@ -726,6 +895,10 @@ tipsButton.addEventListener('click', () => {
   showFinanceTip()
 })
 
+helpButton.addEventListener('click', () => {
+  startTutorial()
+})
+
 closeTipButton.addEventListener('click', () => {
   closeFinanceTip()
 })
@@ -733,6 +906,59 @@ closeTipButton.addEventListener('click', () => {
 tipOverlay.addEventListener('click', (event) => {
   if (event.target === tipOverlay) {
     closeFinanceTip()
+  }
+})
+
+closeTutorialButton.addEventListener('click', () => {
+  closeTutorial()
+})
+
+tutorialPrevious.addEventListener('click', () => {
+  showTutorialStep(tutorialStepIndex - 1)
+})
+
+tutorialNext.addEventListener('click', () => {
+  if (tutorialStepIndex === tutorialSteps.length - 1) {
+    closeTutorial()
+    return
+  }
+
+  showTutorialStep(tutorialStepIndex + 1)
+})
+
+incomeTitleMode.addEventListener('change', () => {
+  localStorage.setItem(
+    incomeTitleModeStorageKey,
+    incomeTitleMode.value
+  )
+
+  renderIncomeEstimateTitle()
+})
+
+paletteOptions.addEventListener('change', (event) => {
+  const palette = event.target.value
+
+  localStorage.setItem(colorPaletteStorageKey, palette)
+  applyColorPalette(palette)
+})
+
+document.addEventListener('keydown', (event) => {
+  if (tutorialOverlay.classList.contains('hidden')) return
+
+  if (event.key === 'Escape') {
+    closeTutorial()
+  }
+
+  if (event.key === 'ArrowLeft' && tutorialStepIndex > 0) {
+    showTutorialStep(tutorialStepIndex - 1)
+  }
+
+  if (event.key === 'ArrowRight') {
+    if (tutorialStepIndex === tutorialSteps.length - 1) {
+      closeTutorial()
+    } else {
+      showTutorialStep(tutorialStepIndex + 1)
+    }
   }
 })
 
@@ -755,6 +981,7 @@ generateMonthOptions().forEach(month => {
 })
 
 monthSelect.value = selectedMonth
+renderIncomeEstimateTitle()
 
 monthSelect.addEventListener('change', async () => {
   selectedMonth = monthSelect.value
@@ -783,6 +1010,12 @@ document.querySelectorAll('[data-scroll-target]').forEach(button => {
 
 window.addEventListener('resize', () => {
   syncAppTopOffset()
+
+  if (!tutorialOverlay.classList.contains('hidden')) {
+    positionTutorialCard(
+      document.querySelector(tutorialSteps[tutorialStepIndex].selector)
+    )
+  }
 })
 
 document.querySelector('#add-income').addEventListener('click', () => {
@@ -1193,6 +1426,115 @@ function closeFinanceTip() {
   tipOverlay.classList.add('hidden')
 }
 
+function startTutorial() {
+  closeFinanceTip()
+  document.querySelector('#dashboard-tab').click()
+  tutorialOverlay.classList.remove('hidden')
+  tutorialOverlay.setAttribute('aria-hidden', 'false')
+  document.body.classList.add('tutorial-active')
+  showTutorialStep(0)
+}
+
+function showTutorialStep(index) {
+  tutorialStepIndex = Math.max(
+    0,
+    Math.min(index, tutorialSteps.length - 1)
+  )
+
+  clearTutorialHighlight()
+
+  const step = tutorialSteps[tutorialStepIndex]
+  const target = document.querySelector(step.selector)
+
+  if (!target) return
+
+  target.classList.add('tutorial-highlight')
+
+  const topNavigation = target.closest('.top-navigation')
+
+  if (topNavigation) {
+    topNavigation.classList.add('tutorial-layer')
+  }
+
+  tutorialStep.innerText =
+    `${tutorialStepIndex + 1} de ${tutorialSteps.length}`
+  tutorialTitle.innerText = step.title
+  tutorialMessage.innerText =
+    typeof step.message === 'function'
+      ? step.message()
+      : step.message
+  tutorialPrevious.disabled = tutorialStepIndex === 0
+  tutorialNext.innerText =
+    tutorialStepIndex === tutorialSteps.length - 1
+      ? 'Entendido'
+      : 'Siguiente'
+
+  tutorialCard.style.visibility = 'hidden'
+
+  if (!topNavigation) {
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }
+
+  setTimeout(() => {
+    positionTutorialCard(target)
+    tutorialCard.style.visibility = 'visible'
+  }, topNavigation ? 30 : 360)
+}
+
+function positionTutorialCard(target) {
+  if (!target || tutorialOverlay.classList.contains('hidden')) return
+
+  tutorialCard.style.removeProperty('top')
+  tutorialCard.style.removeProperty('right')
+  tutorialCard.style.removeProperty('bottom')
+  tutorialCard.style.removeProperty('left')
+
+  if (window.innerWidth <= 768) {
+    tutorialCard.style.left = '12px'
+    tutorialCard.style.right = '12px'
+    tutorialCard.style.bottom = '12px'
+    return
+  }
+
+  const targetRect = target.getBoundingClientRect()
+  const cardRect = tutorialCard.getBoundingClientRect()
+  const margin = 18
+  const cardWidth = Math.min(cardRect.width || 390, window.innerWidth - 32)
+  const left = Math.min(
+    Math.max(targetRect.left + targetRect.width / 2 - cardWidth / 2, 16),
+    window.innerWidth - cardWidth - 16
+  )
+  const fitsBelow =
+    targetRect.bottom + cardRect.height + margin < window.innerHeight
+  const top = fitsBelow
+    ? targetRect.bottom + margin
+    : Math.max(16, targetRect.top - cardRect.height - margin)
+
+  tutorialCard.style.left = `${left}px`
+  tutorialCard.style.top = `${top}px`
+}
+
+function clearTutorialHighlight() {
+  document
+    .querySelectorAll('.tutorial-highlight')
+    .forEach(element => element.classList.remove('tutorial-highlight'))
+
+  document
+    .querySelectorAll('.tutorial-layer')
+    .forEach(element => element.classList.remove('tutorial-layer'))
+}
+
+function closeTutorial() {
+  clearTutorialHighlight()
+  tutorialOverlay.classList.add('hidden')
+  tutorialOverlay.setAttribute('aria-hidden', 'true')
+  document.body.classList.remove('tutorial-active')
+  helpButton.focus()
+}
+
 function playTipSound() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext
@@ -1480,7 +1822,42 @@ function renderSettings() {
   renderAccountOptions()
   renderAccountAliasesForm()
   renderCustomCategories()
+  renderIncomeTitleSetting()
+  renderColorPaletteSettings()
   renderFloatingSettings()
+}
+
+function getIncomeTitleMode() {
+  const savedMode = localStorage.getItem(incomeTitleModeStorageKey)
+
+  return savedMode === 'salary' ? 'salary' : 'estimate'
+}
+
+function renderIncomeTitleSetting() {
+  incomeTitleMode.value = getIncomeTitleMode()
+}
+
+function getColorPalette() {
+  const savedPalette = localStorage.getItem(colorPaletteStorageKey)
+  const availablePalettes = ['classic', 'breeze', 'garden', 'coral']
+
+  return availablePalettes.includes(savedPalette)
+    ? savedPalette
+    : 'classic'
+}
+
+function applyColorPalette(palette = getColorPalette()) {
+  document.body.dataset.palette = palette
+}
+
+function renderColorPaletteSettings() {
+  const selectedPalette = getColorPalette()
+
+  paletteOptions
+    .querySelectorAll('input[name="color-palette"]')
+    .forEach(input => {
+      input.checked = input.value === selectedPalette
+    })
 }
 
 function getFloatingSettings() {
@@ -1899,9 +2276,12 @@ function renderIncomeEstimateTitle() {
   if (!title) return
 
   const monthNumber = Number(selectedMonth.split('-')[1])
+  const currentMonthName = months[monthNumber - 1].toLowerCase()
   const nextMonthName = months[monthNumber % 12].toLowerCase()
 
-  title.innerText = `Ingreso estimado para ${nextMonthName}`
+  title.innerText = getIncomeTitleMode() === 'salary'
+    ? `Sueldo de ${currentMonthName}`
+    : `Ingreso estimado para ${nextMonthName}`
 }
 
 function syncAppTopOffset() {
@@ -3648,7 +4028,9 @@ window.openQuickAdd = function(type) {
 window.showSectionInfo = function(section) {
   const messages = {
     income:
-      'Ingreso estimado\n\nRepresenta el ingreso que esperás recibir durante el próximo período. Te permite planificar tus gastos antes de cobrar y conocer cuánto dinero tendrás disponible.',
+      getIncomeTitleMode() === 'salary'
+        ? 'Sueldo del período\n\nRepresenta el ingreso disponible en el período seleccionado. Es la base para planificar cuánto podés gastar, ahorrar o invertir.'
+        : 'Ingreso estimado\n\nRepresenta el ingreso que esperás recibir durante el próximo período. Te permite planificar tus gastos antes de cobrar y conocer cuánto dinero tendrás disponible.',
     unique:
       'Compromisos\n\nSon gastos que ya sabés que deberás afrontar próximamente, como compras con tarjeta de crédito, cuotas, préstamos, impuestos o cualquier otro pago previsto.'
   }
