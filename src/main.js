@@ -705,18 +705,22 @@ document.querySelector('#app').innerHTML = `
 </div>
 
 <div class="tip-overlay hidden" id="tip-overlay">
-  <div class="tip-card">
+  <div class="tip-card" role="dialog" aria-modal="true" aria-labelledby="tips-title">
     <button
       id="close-tip"
       class="tip-close"
       type="button"
-      aria-label="Cerrar tip"
+      aria-label="Cerrar consejos"
     >
       ×
     </button>
 
-    <span class="tip-kicker">Tip financiero</span>
-    <p id="tip-message"></p>
+    <span class="tip-kicker">Educación financiera</span>
+    <h2 id="tips-title">Consejos para cuidar tus finanzas</h2>
+    <p class="tip-intro">
+      Elegí un consejo para leerlo completo.
+    </p>
+    <div class="tip-list" id="tip-list"></div>
   </div>
 </div>
 
@@ -958,7 +962,7 @@ const reportFrame = document.querySelector('#report-frame')
 const closeReportButton = document.querySelector('#close-report')
 const printReportButton = document.querySelector('#print-report')
 const tipOverlay = document.querySelector('#tip-overlay')
-const tipMessage = document.querySelector('#tip-message')
+const tipList = document.querySelector('#tip-list')
 const closeTipButton = document.querySelector('#close-tip')
 const tutorialOverlay = document.querySelector('#tutorial-overlay')
 const tutorialCard = document.querySelector('#tutorial-card')
@@ -1109,6 +1113,26 @@ tipOverlay.addEventListener('click', (event) => {
   }
 })
 
+tipList.addEventListener('click', (event) => {
+  const toggle = event.target.closest('.tip-item-toggle')
+
+  if (!toggle) return
+
+  const selectedItem = toggle.closest('.tip-item')
+  const wasOpen = selectedItem.classList.contains('open')
+
+  tipList.querySelectorAll('.tip-item').forEach(item => {
+    item.classList.remove('open')
+    item.querySelector('.tip-item-toggle')
+      .setAttribute('aria-expanded', 'false')
+  })
+
+  if (!wasOpen) {
+    selectedItem.classList.add('open')
+    toggle.setAttribute('aria-expanded', 'true')
+  }
+})
+
 closeTutorialButton.addEventListener('click', () => {
   closeTutorial()
 })
@@ -1143,6 +1167,11 @@ paletteOptions.addEventListener('change', (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !tipOverlay.classList.contains('hidden')) {
+    closeFinanceTip()
+    return
+  }
+
   if (tutorialOverlay.classList.contains('hidden')) return
 
   if (event.key === 'Escape') {
@@ -1611,11 +1640,30 @@ function renderSyncQr(token) {
 
 function showFinanceTip() {
   const tips = getFinanceTips()
-  const tip = tips[Math.floor(Math.random() * tips.length)]
 
   playTipSound()
-  tipMessage.innerText = tip
+  tipList.innerHTML = tips
+    .map((tip, index) => `
+      <article class="tip-item">
+        <button
+          class="tip-item-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="tip-content-${index}"
+        >
+          <span>${tip.title}</span>
+          <span class="tip-item-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="tip-item-body" id="tip-content-${index}">
+          <div>
+            <p>${tip.message}</p>
+          </div>
+        </div>
+      </article>
+    `)
+    .join('')
   tipOverlay.classList.remove('hidden')
+  document.body.classList.add('tips-open')
   tipsButton.classList.add('tip-spark')
 
   setTimeout(() => {
@@ -1625,6 +1673,7 @@ function showFinanceTip() {
 
 function closeFinanceTip() {
   tipOverlay.classList.add('hidden')
+  document.body.classList.remove('tips-open')
 }
 
 function startTutorial() {
@@ -1789,18 +1838,66 @@ function playTipSound() {
 
 function getFinanceTips() {
   return [
-    'El primer paso para mejorar tus finanzas es no mentirte a vos mismo: proponete objetivos realistas y cumplilos con constancia.',
-    'Separá primero un porcentaje para ahorro antes de gastar el resto.',
-    'Revisá los gastos chicos repetidos: suelen pesar más de lo que parecen.',
-    'Si una categoría crece dos meses seguidos, poné un límite para el próximo mes.',
-    'Evitá financiar consumos cotidianos en cuotas largas.',
-    'Compará ingresos contra gastos antes de sumar nuevas obligaciones fijas.',
-    'Mantené un fondo de emergencia equivalente a varios meses de gastos básicos.',
-    'Las tarjetas de crédito son tus mejores aliadas, siempre y cuando las uses con cuidado.',
-    'En los gastos con tarjeta, no te excedas más de lo que puedas pagar al vencimiento.',
-    'Las cuotas no siempre son tus mejores aliadas: si las acumulás, se comerán tus ahorros o inversiones.',
-    'Las inversiones a largo plazo son una de las mejores decisiones en las que podés pensar.',
-    '¿Cobraste las vacaciones? No las consumas de golpe: reservalas para el mes siguiente en un plazo fijo o un fondo común, así evitás sentir el impacto cuando vuelva el ciclo normal de gastos.'
+    {
+      title: 'No te mientas con tus finanzas',
+      message:
+        'El primer paso para mejorar tus finanzas es ser honesto con vos mismo. Proponete objetivos realistas, medibles y cumplilos con constancia.'
+    },
+    {
+      title: 'Tu tarjeta es un cheque a 30 días',
+      message:
+        'Recordá que cada compra con tarjeta es dinero que deberás tener disponible al vencimiento. Usala como una herramienta de organización, no como una extensión de tus ingresos.'
+    },
+    {
+      title: 'Ahorrá antes de gastar',
+      message:
+        'Separá primero un porcentaje de tus ingresos para ahorro o inversión. Después organizá tus gastos con el dinero restante.'
+    },
+    {
+      title: 'Cuidá los gastos pequeños',
+      message:
+        'Revisá los consumos chicos y repetidos. Por separado parecen inofensivos, pero acumulados pueden ocupar una parte importante de tu presupuesto.'
+    },
+    {
+      title: 'Prestá atención a las categorías que crecen',
+      message:
+        'Si una categoría aumenta durante dos meses seguidos, analizá qué cambió y definí un límite razonable para el período siguiente.'
+    },
+    {
+      title: 'No acumules cuotas sin control',
+      message:
+        'Las cuotas no siempre son tus mejores aliadas. Cuando se acumulan, reducen tus ingresos futuros y pueden terminar consumiendo tus ahorros o inversiones.'
+    },
+    {
+      title: 'No financies gastos cotidianos a largo plazo',
+      message:
+        'Evitá pagar alimentos, salidas u otros consumos diarios en cuotas largas. Podrías seguir pagándolos mucho después de haberlos consumido.'
+    },
+    {
+      title: 'No gastes más de lo que podés pagar',
+      message:
+        'En tus consumos con tarjeta, no te excedas del monto que realmente podrás pagar al vencimiento sin comprometer gastos esenciales.'
+    },
+    {
+      title: 'Construí un fondo de emergencia',
+      message:
+        'Reservá gradualmente dinero para cubrir varios meses de gastos básicos. Ese fondo evita que una urgencia se convierta en deuda.'
+    },
+    {
+      title: 'Pensá tus inversiones a largo plazo',
+      message:
+        'Las inversiones a largo plazo suelen beneficiarse de la constancia. Definí objetivos y plazos antes de elegir dónde colocar tu dinero.'
+    },
+    {
+      title: 'Compará antes de asumir otra obligación',
+      message:
+        'Revisá tus ingresos, gastos y cuotas vigentes antes de sumar un nuevo pago fijo. Lo importante no es solamente poder comprar, sino poder sostenerlo.'
+    },
+    {
+      title: 'Reservá el dinero de vacaciones',
+      message:
+        'Si cobraste vacaciones, evitá consumir todo de inmediato. Podés reservarlo para el mes siguiente en un plazo fijo o fondo común y reducir el impacto cuando vuelva tu ciclo normal de gastos.'
+    }
   ]
 }
 

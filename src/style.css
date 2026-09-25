@@ -1635,7 +1635,9 @@ button {
 
 .tip-card {
   position: relative;
-  width: min(430px, 100%);
+  width: min(560px, 100%);
+  max-height: calc(100vh - 150px);
+  overflow: hidden;
   padding: 22px 22px 20px;
   border-radius: 24px;
   background:
@@ -1663,13 +1665,116 @@ button {
   letter-spacing: 0;
 }
 
-.tip-card p {
+.tip-card h2 {
   margin: 0;
-  padding-right: 20px;
+  padding-right: 34px;
+  color: #172033;
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.tip-intro {
+  margin: 0;
+  padding: 6px 34px 14px 0;
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tip-list {
+  max-height: calc(100vh - 285px);
+  overflow-y: auto;
+  display: grid;
+  gap: 7px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.tip-item {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .17);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .52);
+  transition:
+    border-color .24s ease,
+    background .24s ease,
+    box-shadow .24s ease;
+}
+
+.tip-item.open {
+  border-color: color-mix(in srgb, var(--primary) 26%, transparent);
+  background: color-mix(in srgb, var(--primary) 6%, white);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+}
+
+.tip-item-toggle {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
   color: #1e293b;
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1.42;
+  text-align: left;
+  font-size: .82rem;
+  font-weight: 850;
+}
+
+.tip-item-toggle:hover {
+  background: rgba(255, 255, 255, .46);
+}
+
+.tip-item-chevron {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(148, 163, 184, .12);
+  color: #64748b;
+  font-size: .9rem;
+  transition:
+    transform .3s cubic-bezier(.16, 1, .3, 1),
+    background .2s ease,
+    color .2s ease;
+}
+
+.tip-item.open .tip-item-chevron {
+  transform: rotate(180deg);
+  background: color-mix(in srgb, var(--primary) 12%, white);
+  color: var(--primary);
+}
+
+.tip-item-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows .32s cubic-bezier(.16, 1, .3, 1),
+    opacity .24s ease;
+}
+
+.tip-item-body > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tip-item.open .tip-item-body {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.tip-item-body p {
+  margin: 0;
+  padding: 0 12px 13px;
+  color: #475569;
+  font-size: .78rem;
+  line-height: 1.5;
 }
 
 .tip-close {
@@ -1687,6 +1792,10 @@ button {
 }
 
 body.tutorial-active {
+  overflow: hidden;
+}
+
+body.tips-open {
   overflow: hidden;
 }
 
@@ -2990,8 +3099,28 @@ body.dark-mode .tip-card {
     0 24px 70px rgba(0, 0, 0, .34);
 }
 
-body.dark-mode .tip-card p {
+body.dark-mode .tip-card h2,
+body.dark-mode .tip-item-toggle {
   color: #f8fafc;
+}
+
+body.dark-mode .tip-intro,
+body.dark-mode .tip-item-body p {
+  color: #cbd5e1;
+}
+
+body.dark-mode .tip-item {
+  background: rgba(15, 23, 42, .44);
+  border-color: rgba(148, 163, 184, .16);
+}
+
+body.dark-mode .tip-item.open {
+  background: color-mix(in srgb, var(--primary) 15%, #0f172a);
+  border-color: color-mix(in srgb, var(--primary) 32%, transparent);
+}
+
+body.dark-mode .tip-item-toggle:hover {
+  background: rgba(51, 65, 85, .45);
 }
 
 body.dark-mode .tip-kicker {
