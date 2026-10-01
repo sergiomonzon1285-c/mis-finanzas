@@ -20,16 +20,31 @@ document.querySelector('#app').innerHTML = `
   <div class="top-navigation">
     <header class="topbar">
       <div class="topbar-title-group">
-        <h1>
-          <img
-            class="brand-mark"
-            src="/icon-192.png"
-            alt=""
-            width="34"
-            height="34"
+        <div class="brand-navigation-group">
+          <button
+            class="mobile-menu-btn"
+            id="mobile-menu-btn"
+            type="button"
+            aria-label="Abrir menú"
+            aria-expanded="false"
+            aria-controls="mobile-sidebar"
           >
-          Mis Finanzas
-        </h1>
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <h1>
+            <img
+              class="brand-mark"
+              src="/icon-192.png"
+              alt=""
+              width="34"
+              height="34"
+            >
+            Mis Finanzas
+          </h1>
+        </div>
 
         <div class="user-greeting-row">
           <span id="user-greeting">Hola</span>
@@ -115,6 +130,61 @@ document.querySelector('#app').innerHTML = `
       </button>
     </div>
   </div>
+
+  <div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop"></div>
+
+  <aside
+    class="mobile-sidebar"
+    id="mobile-sidebar"
+    aria-hidden="true"
+  >
+    <div class="mobile-sidebar-header">
+      <div>
+        <img src="/icon-192.png" alt="" width="38" height="38">
+        <span>
+          <strong>Mis Finanzas</strong>
+          <small>Navegación</small>
+        </span>
+      </div>
+
+      <button
+        id="mobile-sidebar-close"
+        type="button"
+        aria-label="Cerrar menú"
+      >
+        ×
+      </button>
+    </div>
+
+    <nav class="mobile-sidebar-nav" aria-label="Navegación móvil">
+      <button type="button" data-mobile-destination="dashboard">
+        <span aria-hidden="true">▦</span>
+        <span>Dashboard</span>
+      </button>
+
+      <button type="button" data-mobile-destination="patrimony">
+        <span aria-hidden="true">◆</span>
+        <span>Patrimonio</span>
+      </button>
+
+      <button type="button" data-mobile-destination="progress">
+        <span aria-hidden="true">★</span>
+        <span>Puntaje y logros</span>
+      </button>
+
+      <button type="button" data-mobile-destination="settings">
+        <span aria-hidden="true">⚙</span>
+        <span>Configuración</span>
+      </button>
+    </nav>
+
+    <div class="mobile-sidebar-footer">
+      <button id="mobile-theme-toggle" type="button">
+        <span id="mobile-theme-icon" aria-hidden="true">☾</span>
+        <span id="mobile-theme-label">Modo oscuro</span>
+      </button>
+    </div>
+  </aside>
 
   <main>
     <div id="dashboard-section" class="page-section dashboard-section">
@@ -812,6 +882,8 @@ const expandedExpenseSections = {
   unique: false,
   investments: false
 }
+let wasMobileExpenseLayout =
+  window.matchMedia('(max-width: 768px)').matches
 
 const tutorialPages = {
   dashboard: [
@@ -926,6 +998,14 @@ const investmentDueDate = document.querySelector('#investment-due-date')
 const expenseInstallments = document.querySelector('#expense-installments')
 const monthSelect = document.querySelector('#month-select')
 const themeToggle = document.querySelector('#theme-toggle')
+const mobileMenuButton = document.querySelector('#mobile-menu-btn')
+const mobileSidebar = document.querySelector('#mobile-sidebar')
+const mobileSidebarBackdrop =
+  document.querySelector('#mobile-sidebar-backdrop')
+const mobileSidebarClose = document.querySelector('#mobile-sidebar-close')
+const mobileThemeToggle = document.querySelector('#mobile-theme-toggle')
+const mobileThemeIcon = document.querySelector('#mobile-theme-icon')
+const mobileThemeLabel = document.querySelector('#mobile-theme-label')
 const progressEntryButton = document.querySelector('#progress-entry-btn')
 const progressBackButton = document.querySelector('#progress-back-btn')
 const progressPeriodLabel = document.querySelector('#progress-period-label')
@@ -1086,6 +1166,8 @@ if (savedTheme === 'dark') {
   themeToggle.innerText = '☀️'
 }
 
+syncMobileThemeControl()
+
 themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode')
 
@@ -1093,6 +1175,23 @@ themeToggle.addEventListener('click', () => {
 
   themeToggle.innerText = isDarkMode ? '☀️' : '🌙'
   localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
+  syncMobileThemeControl()
+})
+
+mobileMenuButton.addEventListener('click', () => {
+  openMobileSidebar()
+})
+
+mobileSidebarClose.addEventListener('click', () => {
+  closeMobileSidebar()
+})
+
+mobileSidebarBackdrop.addEventListener('click', () => {
+  closeMobileSidebar()
+})
+
+mobileThemeToggle.addEventListener('click', () => {
+  themeToggle.click()
 })
 
 tipsButton.addEventListener('click', () => {
@@ -1167,6 +1266,11 @@ paletteOptions.addEventListener('change', (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && document.body.classList.contains('mobile-nav-open')) {
+    closeMobileSidebar()
+    return
+  }
+
   if (event.key === 'Escape' && !tipOverlay.classList.contains('hidden')) {
     closeFinanceTip()
     return
@@ -1239,6 +1343,18 @@ document.querySelectorAll('[data-scroll-target]').forEach(button => {
 })
 
 window.addEventListener('resize', () => {
+  const isMobileExpenseLayout =
+    window.matchMedia('(max-width: 768px)').matches
+
+  if (isMobileExpenseLayout !== wasMobileExpenseLayout) {
+    wasMobileExpenseLayout = isMobileExpenseLayout
+    renderExpenses()
+  }
+
+  if (window.innerWidth > 768) {
+    closeMobileSidebar()
+  }
+
   syncAppTopOffset()
 
   if (!tutorialOverlay.classList.contains('hidden')) {
@@ -2605,6 +2721,36 @@ function syncAppTopOffset() {
   )
 }
 
+function openMobileSidebar() {
+  document.body.classList.add('mobile-nav-open')
+  mobileSidebar.setAttribute('aria-hidden', 'false')
+  mobileMenuButton.setAttribute('aria-expanded', 'true')
+  mobileSidebarClose.focus()
+}
+
+function closeMobileSidebar() {
+  document.body.classList.remove('mobile-nav-open')
+  mobileSidebar.setAttribute('aria-hidden', 'true')
+  mobileMenuButton.setAttribute('aria-expanded', 'false')
+}
+
+function syncMobileThemeControl() {
+  const isDarkMode = document.body.classList.contains('dark-mode')
+
+  mobileThemeIcon.innerText = isDarkMode ? '☀' : '☾'
+  mobileThemeLabel.innerText = isDarkMode ? 'Modo claro' : 'Modo oscuro'
+}
+
+function syncMobileNavigation(destination) {
+  document.querySelectorAll('[data-mobile-destination]')
+    .forEach(button => {
+      const isActive = button.dataset.mobileDestination === destination
+
+      button.classList.toggle('active', isActive)
+      button.setAttribute('aria-current', isActive ? 'page' : 'false')
+    })
+}
+
 function renderIncome() {
   const list = document.querySelector('#income-list')
   const expenses = getExpenses('income')
@@ -2667,7 +2813,16 @@ function renderLimitedExpenseList(
   type,
   renderItem = createExpenseItem
 ) {
-  const limit = 5
+  const compactMobileTypes = [
+    'income',
+    'fixed',
+    'installments',
+    'unique'
+  ]
+  const isMobileLayout = window.matchMedia('(max-width: 768px)').matches
+  const limit = isMobileLayout && compactMobileTypes.includes(type)
+    ? 3
+    : 5
   const isExpanded = expandedExpenseSections[type]
   const visibleExpenses = isExpanded
     ? expenses
@@ -4644,6 +4799,7 @@ async function start() {
     dashboardTab.classList.add('active')
     patrimonyTab.classList.remove('active')
     settingsTab.classList.remove('active')
+    syncMobileNavigation('dashboard')
     syncAppTopOffset()
     animateSection(dashboardSection)
   })
@@ -4658,6 +4814,7 @@ async function start() {
     patrimonyTab.classList.add('active')
     dashboardTab.classList.remove('active')
     settingsTab.classList.remove('active')
+    syncMobileNavigation('patrimony')
     syncAppTopOffset()
     animateSection(patrimonySection)
   })
@@ -4672,6 +4829,7 @@ async function start() {
     settingsTab.classList.add('active')
     dashboardTab.classList.remove('active')
     patrimonyTab.classList.remove('active')
+    syncMobileNavigation('settings')
     renderSettings()
     syncAppTopOffset()
     animateSection(settingsSection)
@@ -4687,6 +4845,7 @@ async function start() {
     dashboardTab.classList.remove('active')
     patrimonyTab.classList.remove('active')
     settingsTab.classList.remove('active')
+    syncMobileNavigation('progress')
     renderProgressDashboard()
     syncAppTopOffset()
     animateSection(progressSection)
@@ -4696,6 +4855,23 @@ async function start() {
   progressBackButton.addEventListener('click', () => {
     dashboardTab.click()
   })
+
+  document.querySelectorAll('[data-mobile-destination]')
+    .forEach(button => {
+      button.addEventListener('click', () => {
+        const destination = button.dataset.mobileDestination
+
+        if (destination === 'dashboard') dashboardTab.click()
+        if (destination === 'patrimony') patrimonyTab.click()
+        if (destination === 'progress') progressEntryButton.click()
+        if (destination === 'settings') settingsTab.click()
+
+        closeMobileSidebar()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      })
+    })
+
+  syncMobileNavigation('dashboard')
 
   await loadDollarRate()
   await loadExpenses()
