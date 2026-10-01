@@ -97,38 +97,6 @@ document.querySelector('#app').innerHTML = `
       <button class="tab-btn" id="patrimony-tab">💼 Patrimonio</button>
       <button class="tab-btn" id="settings-tab">⚙️ Configuración</button>
     </div>
-
-    <div class="quick-nav">
-      <button data-scroll-target="#income-section">
-        <span class="quick-nav-icon">💰</span>
-        <span>Ingresos</span>
-      </button>
-
-      <button data-scroll-target="#fixed-section">
-        <span class="quick-nav-icon">📌</span>
-        <span>Fijos</span>
-      </button>
-
-      <button data-scroll-target="#installments-section">
-        <span class="quick-nav-icon">💳</span>
-        <span>Cuotas</span>
-      </button>
-
-      <button data-scroll-target="#unique-section">
-        <span class="quick-nav-icon">🛒</span>
-        <span>Único Pago</span>
-      </button>
-
-      <button data-scroll-target="#balance-section">
-        <span class="quick-nav-icon">📊</span>
-        <span>Balance</span>
-      </button>
-
-      <button data-scroll-target="#card-dates-section">
-        <span class="quick-nav-icon">📅</span>
-        <span>Vtos.</span>
-      </button>
-    </div>
   </div>
 
   <div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop"></div>
@@ -611,6 +579,39 @@ document.querySelector('#app').innerHTML = `
                   <small>Cálida y enérgica</small>
                 </span>
                 <span class="palette-swatches palette-coral" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="volt">
+                <span class="palette-copy">
+                  <strong>Volt</strong>
+                  <small>Negro, amarillo y blanco</small>
+                </span>
+                <span class="palette-swatches palette-volt" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="neon">
+                <span class="palette-copy">
+                  <strong>Neón</strong>
+                  <small>Eléctrica y contemporánea</small>
+                </span>
+                <span class="palette-swatches palette-neon" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i>
+                </span>
+              </label>
+
+              <label class="palette-option">
+                <input type="radio" name="color-palette" value="burgundy">
+                <span class="palette-copy">
+                  <strong>Borgoña</strong>
+                  <small>Profunda y sofisticada</small>
+                </span>
+                <span class="palette-swatches palette-burgundy" aria-hidden="true">
                   <i></i><i></i><i></i><i></i>
                 </span>
               </label>
@@ -1322,24 +1323,6 @@ monthSelect.addEventListener('change', async () => {
   await ensureInvestmentsForSelectedMonth()
   await ensureProgressSnapshotForMonth(selectedMonth)
   renderExpenses()
-})
-
-document.querySelectorAll('[data-scroll-target]').forEach(button => {
-  button.addEventListener('click', () => {
-    const target = document.querySelector(button.dataset.scrollTarget)
-    const navigation = document.querySelector('.top-navigation')
-
-    if (!target || !navigation) return
-
-    const navigationHeight = navigation.offsetHeight
-    const targetTop = target.getBoundingClientRect().top + window.scrollY
-    const scrollTop = targetTop - navigationHeight - 34
-
-    window.scrollTo({
-      top: Math.max(scrollTop, 0),
-      behavior: 'smooth'
-    })
-  })
 })
 
 window.addEventListener('resize', () => {
@@ -2264,7 +2247,15 @@ function renderIncomeTitleSetting() {
 
 function getColorPalette() {
   const savedPalette = localStorage.getItem(colorPaletteStorageKey)
-  const availablePalettes = ['classic', 'breeze', 'garden', 'coral']
+  const availablePalettes = [
+    'classic',
+    'breeze',
+    'garden',
+    'coral',
+    'volt',
+    'neon',
+    'burgundy'
+  ]
 
   return availablePalettes.includes(savedPalette)
     ? savedPalette
